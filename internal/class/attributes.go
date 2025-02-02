@@ -3,7 +3,6 @@ package class
 import (
 	"bufio"
 	"errors"
-	"log"
 )
 
 type AttributeInfo interface{}
@@ -44,12 +43,13 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (*Attribute, error) {
 	}
 
 	var info AttributeInfo
-	log.Println("parsing attribute " + name)
 	switch name {
 	case "Code":
 		info, err = NewCodeInfo(reader, cp)
 	case "LineNumberTable":
 		info, err = NewLineNumberTableInfo(reader)
+	case "SourceFile":
+		info, err = readUint16(reader)
 	default:
 		return nil, errors.New("unknown attribute: " + name)
 	}
