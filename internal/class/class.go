@@ -27,6 +27,21 @@ func (c *Class) PrettyPrint() error {
 	return nil
 }
 
+func (c *Class) GetMainMethod() (*Method, error) {
+	for _, m := range c.Methods {
+		isMain, err := m.IsMain(&c.ConstantPool)
+		if err != nil {
+			return nil, err
+		}
+
+		if isMain {
+			return &m, nil
+		}
+	}
+
+	return nil, errors.New("no main method found")
+}
+
 func NewClass(path string) (*Class, error) {
 	log.Printf("parsing %s", path)
 

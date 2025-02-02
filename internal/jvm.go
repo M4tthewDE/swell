@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+
 	"github.com/m4tthewde/swell/internal/class"
 )
 
@@ -13,7 +14,7 @@ func Run(className string) error {
 		return err
 	}
 
-	err = class.PrettyPrint()
+	_, err = class.GetMainMethod()
 	if err != nil {
 		return err
 	}
