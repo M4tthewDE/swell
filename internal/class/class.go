@@ -29,10 +29,22 @@ func readUint16(reader *bufio.Reader) (uint16, error) {
 	return binary.BigEndian.Uint16(data), nil
 }
 
+func readUint32(reader *bufio.Reader) (uint32, error) {
+	data := make([]byte, 4)
+	_, err := reader.Read(data)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint32(data), nil
+}
+
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
 
 type Class struct {
 	constantPool ConstantPool
+	methods      []Method
+	attributes   []Attribute
 }
 
 func NewClass(path string) (*Class, error) {
@@ -57,7 +69,7 @@ func NewClass(path string) (*Class, error) {
 		return nil, errors.New("magic does not match")
 	}
 
-	// we have no use for minor and major version as of now
+	// skip minor and major version
 	_, err = reader.Discard(4)
 	if err != nil {
 		return nil, err
@@ -73,7 +85,34 @@ func NewClass(path string) (*Class, error) {
 		return nil, err
 	}
 
-	return &Class{constantPool: *constantPool}, nil
+	// skip to methods_count (this relies on interfaces and fields being 0)
+	_, err = reader.Discard(10)
+	if err != nil {
+		return nil, err
+	}
+
+	methodsCount, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	methods, err := NewMethods(reader, methodsCount)
+	if err != nil {
+		return nil, err
+	}
+
+	attributesCount, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	attributes, err := NewAttributes(reader, attributesCount)
+
+	return &Class{
+		constantPool: *constantPool,
+		methods:      methods,
+		attributes:   attributes,
+	}, nil
 }
 
 type ConstantPool struct {
@@ -214,4 +253,97 @@ func NewStringInfo(reader *bufio.Reader) (ConstantKind, error) {
 	}
 
 	return StringInfo{stringIndex: stringIndex}, nil
+}
+
+type Method struct {
+	accessFlags     uint16
+	nameIndex       uint16
+	descriptorIndex uint16
+	attributes      []Attribute
+}
+
+func NewMethods(reader *bufio.Reader, count uint16) ([]Method, error) {
+	methods := make([]Method, count)
+	for i := range count {
+		method, err := NewMethod(reader)
+		if err != nil {
+			return nil, err
+		}
+
+		methods[i] = *method
+	}
+
+	return methods, nil
+}
+
+func NewMethod(reader *bufio.Reader) (*Method, error) {
+	accessFlags, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	nameIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	descriptorIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	attributesCount, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	attributes, err := NewAttributes(reader, attributesCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Method{
+			accessFlags:     accessFlags,
+			nameIndex:       nameIndex,
+			descriptorIndex: descriptorIndex,
+			attributes:      attributes},
+		nil
+}
+
+type Attribute struct {
+	nameIndex uint16
+}
+
+func NewAttributes(reader *bufio.Reader, count uint16) ([]Attribute, error) {
+	attributes := make([]Attribute, count)
+	for i := range count {
+		attribute, err := NewAttribute(reader)
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[i] = *attribute
+	}
+
+	return attributes, nil
+}
+
+func NewAttribute(reader *bufio.Reader) (*Attribute, error) {
+	nameIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	attributeLength, err := readUint32(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: parse attribute
+	_, err = reader.Discard(int(attributeLength))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Attribute{nameIndex: nameIndex}, nil
 }
