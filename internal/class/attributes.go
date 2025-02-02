@@ -5,7 +5,9 @@ import (
 	"errors"
 )
 
-type Attribute interface{}
+type Attribute interface {
+	Name() string
+}
 
 func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attribute, error) {
 	attributes := make([]Attribute, count)
@@ -54,6 +56,10 @@ type CodeAttribute struct {
 	MaxLocals  uint16      `json:"max_locals"`
 	Code       []byte      `json:"code"`
 	Attributes []Attribute `json:"attributes"`
+}
+
+func (c CodeAttribute) Name() string {
+	return "Code"
 }
 
 func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
@@ -106,6 +112,10 @@ type LineNumberTableAttribute struct {
 	Table []LineNumberTableEntry `json:"table"`
 }
 
+func (l LineNumberTableAttribute) Name() string {
+	return "LineNumberTable"
+}
+
 type LineNumberTableEntry struct {
 	StartPc    uint16 `json:"start_pc"`
 	LineNumber uint16 `json:"line_number"`
@@ -141,6 +151,10 @@ func NewLineNumberTableAttribute(reader *bufio.Reader) (Attribute, error) {
 
 type SourceFileAttribute struct {
 	SourceFileIndex uint16 `json:"source_file_index"`
+}
+
+func (s SourceFileAttribute) Name() string {
+	return "SourceFile"
 }
 
 func NewSourceFileAttribute(reader *bufio.Reader) (Attribute, error) {
