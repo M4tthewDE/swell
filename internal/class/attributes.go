@@ -48,6 +48,8 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (*Attribute, error) {
 	switch name {
 	case "Code":
 		info, err = NewCodeInfo(reader, cp)
+	case "LineNumberTable":
+		info, err = NewLineNumberTableInfo(reader)
 	default:
 		return nil, errors.New("unknown attribute: " + name)
 	}
@@ -110,4 +112,37 @@ func NewCodeInfo(reader *bufio.Reader, cp *ConstantPool) (AttributeInfo, error) 
 		code:       code,
 		attributes: attributes,
 	}, nil
+}
+
+type LineNumberTableEntry struct {
+	startPc    uint16
+	lineNumber uint16
+}
+
+func NewLineNumberTableInfo(reader *bufio.Reader) (AttributeInfo, error) {
+	length, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	lineNumberTable := make([]LineNumberTableEntry, length)
+
+	for i := range length {
+		startPc, err := readUint16(reader)
+		if err != nil {
+			return nil, err
+		}
+
+		lineNumber, err := readUint16(reader)
+		if err != nil {
+			return nil, err
+		}
+
+		lineNumberTable[i] = LineNumberTableEntry{
+			startPc:    startPc,
+			lineNumber: lineNumber,
+		}
+	}
+
+	return lineNumberTable, nil
 }
