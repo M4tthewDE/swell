@@ -5,12 +5,7 @@ import (
 	"errors"
 )
 
-type AttributeInfo interface{}
-
-type Attribute struct {
-	nameIndex     uint16
-	attributeInfo AttributeInfo
-}
+type Attribute interface{}
 
 func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attribute, error) {
 	attributes := make([]Attribute, count)
@@ -20,13 +15,13 @@ func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attr
 			return nil, err
 		}
 
-		attributes[i] = *attribute
+		attributes[i] = attribute
 	}
 
 	return attributes, nil
 }
 
-func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (*Attribute, error) {
+func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	nameIndex, err := readUint16(reader)
 	if err != nil {
 		return nil, err
@@ -42,33 +37,26 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (*Attribute, error) {
 		return nil, err
 	}
 
-	var info AttributeInfo
 	switch name {
 	case "Code":
-		info, err = NewCodeInfo(reader, cp)
+		return NewCodeAttribute(reader, cp)
 	case "LineNumberTable":
-		info, err = NewLineNumberTableInfo(reader)
+		return NewLineNumberTableAttribute(reader)
 	case "SourceFile":
-		info, err = readUint16(reader)
+		return NewSourceFileAttribute(reader)
 	default:
 		return nil, errors.New("unknown attribute: " + name)
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Attribute{nameIndex: nameIndex, attributeInfo: info}, nil
 }
 
-type CodeAttributeInfo struct {
+type CodeAttribute struct {
 	maxStack   uint16
 	maxLocals  uint16
 	code       []byte
 	attributes []Attribute
 }
 
-func NewCodeInfo(reader *bufio.Reader, cp *ConstantPool) (AttributeInfo, error) {
+func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	maxStack, err := readUint16(reader)
 	if err != nil {
 		return nil, err
@@ -106,7 +94,7 @@ func NewCodeInfo(reader *bufio.Reader, cp *ConstantPool) (AttributeInfo, error) 
 		return nil, err
 	}
 
-	return CodeAttributeInfo{
+	return CodeAttribute{
 		maxStack:   maxStack,
 		maxLocals:  maxLocals,
 		code:       code,
@@ -114,18 +102,22 @@ func NewCodeInfo(reader *bufio.Reader, cp *ConstantPool) (AttributeInfo, error) 
 	}, nil
 }
 
+type LineNumberTableAttribute struct {
+	table []LineNumberTableEntry
+}
+
 type LineNumberTableEntry struct {
 	startPc    uint16
 	lineNumber uint16
 }
 
-func NewLineNumberTableInfo(reader *bufio.Reader) (AttributeInfo, error) {
+func NewLineNumberTableAttribute(reader *bufio.Reader) (Attribute, error) {
 	length, err := readUint16(reader)
 	if err != nil {
 		return nil, err
 	}
 
-	lineNumberTable := make([]LineNumberTableEntry, length)
+	table := make([]LineNumberTableEntry, length)
 
 	for i := range length {
 		startPc, err := readUint16(reader)
@@ -138,11 +130,24 @@ func NewLineNumberTableInfo(reader *bufio.Reader) (AttributeInfo, error) {
 			return nil, err
 		}
 
-		lineNumberTable[i] = LineNumberTableEntry{
+		table[i] = LineNumberTableEntry{
 			startPc:    startPc,
 			lineNumber: lineNumber,
 		}
 	}
 
-	return lineNumberTable, nil
+	return LineNumberTableAttribute{table: table}, nil
+}
+
+type SourceFileAttribute struct {
+	sourceFileIndex uint16
+}
+
+func NewSourceFileAttribute(reader *bufio.Reader) (Attribute, error) {
+	sourceFileIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return SourceFileAttribute{sourceFileIndex: sourceFileIndex}, nil
 }
