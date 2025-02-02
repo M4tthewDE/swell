@@ -11,10 +11,10 @@ type Method struct {
 	attributes      []Attribute
 }
 
-func NewMethods(reader *bufio.Reader, count uint16) ([]Method, error) {
+func NewMethods(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Method, error) {
 	methods := make([]Method, count)
 	for i := range count {
-		method, err := NewMethod(reader)
+		method, err := NewMethod(reader, cp)
 		if err != nil {
 			return nil, err
 		}
@@ -25,7 +25,7 @@ func NewMethods(reader *bufio.Reader, count uint16) ([]Method, error) {
 	return methods, nil
 }
 
-func NewMethod(reader *bufio.Reader) (*Method, error) {
+func NewMethod(reader *bufio.Reader, cp *ConstantPool) (*Method, error) {
 	accessFlags, err := readUint16(reader)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func NewMethod(reader *bufio.Reader) (*Method, error) {
 		return nil, err
 	}
 
-	attributes, err := NewAttributes(reader, attributesCount)
+	attributes, err := NewAttributes(reader, attributesCount, cp)
 	if err != nil {
 		return nil, err
 	}

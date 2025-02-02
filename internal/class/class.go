@@ -95,7 +95,7 @@ func NewClass(path string) (*Class, error) {
 		return nil, err
 	}
 
-	methods, err := NewMethods(reader, methodsCount)
+	methods, err := NewMethods(reader, methodsCount, constantPool)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,10 @@ func NewClass(path string) (*Class, error) {
 		return nil, err
 	}
 
-	attributes, err := NewAttributes(reader, attributesCount)
+	attributes, err := NewAttributes(reader, attributesCount, constantPool)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Class{
 		constantPool: *constantPool,
