@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"log"
 	"os"
@@ -41,9 +42,19 @@ func readUint32(reader *bufio.Reader) (uint32, error) {
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
 
 type Class struct {
-	constantPool ConstantPool
-	methods      []Method
-	attributes   []Attribute
+	ConstantPool ConstantPool `json:"constant_pool"`
+	Methods      []Method     `json:"methods"`
+	Attributes   []Attribute  `json:"attributes"`
+}
+
+func (c *Class) PrettyPrint() error {
+	data, err := json.MarshalIndent(c, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	log.Println(string(data))
+	return nil
 }
 
 func NewClass(path string) (*Class, error) {
@@ -111,8 +122,8 @@ func NewClass(path string) (*Class, error) {
 	}
 
 	return &Class{
-		constantPool: *constantPool,
-		methods:      methods,
-		attributes:   attributes,
+		ConstantPool: *constantPool,
+		Methods:      methods,
+		Attributes:   attributes,
 	}, nil
 }

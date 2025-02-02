@@ -50,10 +50,10 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 }
 
 type CodeAttribute struct {
-	maxStack   uint16
-	maxLocals  uint16
-	code       []byte
-	attributes []Attribute
+	MaxStack   uint16      `json:"max_stack"`
+	MaxLocals  uint16      `json:"max_locals"`
+	Code       []byte      `json:"code"`
+	Attributes []Attribute `json:"attributes"`
 }
 
 func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
@@ -95,20 +95,20 @@ func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error)
 	}
 
 	return CodeAttribute{
-		maxStack:   maxStack,
-		maxLocals:  maxLocals,
-		code:       code,
-		attributes: attributes,
+		MaxStack:   maxStack,
+		MaxLocals:  maxLocals,
+		Code:       code,
+		Attributes: attributes,
 	}, nil
 }
 
 type LineNumberTableAttribute struct {
-	table []LineNumberTableEntry
+	Table []LineNumberTableEntry `json:"table"`
 }
 
 type LineNumberTableEntry struct {
-	startPc    uint16
-	lineNumber uint16
+	StartPc    uint16 `json:"start_pc"`
+	LineNumber uint16 `json:"line_number"`
 }
 
 func NewLineNumberTableAttribute(reader *bufio.Reader) (Attribute, error) {
@@ -131,16 +131,16 @@ func NewLineNumberTableAttribute(reader *bufio.Reader) (Attribute, error) {
 		}
 
 		table[i] = LineNumberTableEntry{
-			startPc:    startPc,
-			lineNumber: lineNumber,
+			StartPc:    startPc,
+			LineNumber: lineNumber,
 		}
 	}
 
-	return LineNumberTableAttribute{table: table}, nil
+	return LineNumberTableAttribute{Table: table}, nil
 }
 
 type SourceFileAttribute struct {
-	sourceFileIndex uint16
+	SourceFileIndex uint16 `json:"source_file_index"`
 }
 
 func NewSourceFileAttribute(reader *bufio.Reader) (Attribute, error) {
@@ -149,5 +149,5 @@ func NewSourceFileAttribute(reader *bufio.Reader) (Attribute, error) {
 		return nil, err
 	}
 
-	return SourceFileAttribute{sourceFileIndex: sourceFileIndex}, nil
+	return SourceFileAttribute{SourceFileIndex: sourceFileIndex}, nil
 }

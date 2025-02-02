@@ -7,19 +7,19 @@ import (
 )
 
 type ConstantPool struct {
-	infos []CpInfo
+	Infos []CpInfo `json:"infos"`
 }
 
 func (cp *ConstantPool) GetUtf8(n uint16) (string, error) {
-	if info, ok := cp.infos[n-1].(Utf8Info); ok {
-		return string(info.bytes), nil
+	if info, ok := cp.Infos[n-1].(Utf8Info); ok {
+		return info.Content, nil
 	}
 
 	return "", nil
 }
 
 func NewConstantPool(reader *bufio.Reader, count uint16) (*ConstantPool, error) {
-	infos := make([]CpInfo, count)
+	infos := make([]CpInfo, count-1)
 
 	for i := range count - 1 {
 		cpInfo, err := NewCpInfo(reader)
@@ -30,7 +30,7 @@ func NewConstantPool(reader *bufio.Reader, count uint16) (*ConstantPool, error) 
 		infos[i] = *cpInfo
 	}
 
-	return &ConstantPool{infos: infos}, nil
+	return &ConstantPool{Infos: infos}, nil
 }
 
 type CpInfo interface{}
@@ -67,8 +67,8 @@ func NewCpInfo(reader *bufio.Reader) (*CpInfo, error) {
 }
 
 type RefInfo struct {
-	classIndex       uint16
-	nameAndTypeIndex uint16
+	ClassIndex       uint16 `json:"class_index"`
+	NameAndTypeIndex uint16 `json:"name_and_type_index"`
 }
 
 func NewRefInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -82,11 +82,11 @@ func NewRefInfo(reader *bufio.Reader) (CpInfo, error) {
 		return nil, err
 	}
 
-	return RefInfo{classIndex: classIndex, nameAndTypeIndex: nameAndTypeIndex}, nil
+	return RefInfo{ClassIndex: classIndex, NameAndTypeIndex: nameAndTypeIndex}, nil
 }
 
 type ClassInfo struct {
-	nameIndex uint16
+	NameIndex uint16 `json:"name_index"`
 }
 
 func NewClassInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -95,12 +95,12 @@ func NewClassInfo(reader *bufio.Reader) (CpInfo, error) {
 		return nil, err
 	}
 
-	return ClassInfo{nameIndex: nameIndex}, nil
+	return ClassInfo{NameIndex: nameIndex}, nil
 }
 
 type NameAndTypeInfo struct {
-	nameIndex       uint16
-	descriptorIndex uint16
+	NameIndex       uint16 `json:"name_index"`
+	DescriptorIndex uint16 `json:"descriptor_index"`
 }
 
 func NewNameAndTypeInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -114,11 +114,11 @@ func NewNameAndTypeInfo(reader *bufio.Reader) (CpInfo, error) {
 		return nil, err
 	}
 
-	return NameAndTypeInfo{nameIndex: nameIndex, descriptorIndex: descriptorIndex}, nil
+	return NameAndTypeInfo{NameIndex: nameIndex, DescriptorIndex: descriptorIndex}, nil
 }
 
 type Utf8Info struct {
-	bytes []byte
+	Content string `json:"content"`
 }
 
 func NewUtf8Info(reader *bufio.Reader) (CpInfo, error) {
@@ -133,11 +133,11 @@ func NewUtf8Info(reader *bufio.Reader) (CpInfo, error) {
 		return nil, err
 	}
 
-	return Utf8Info{bytes: bytes}, nil
+	return Utf8Info{Content: string(bytes)}, nil
 }
 
 type StringInfo struct {
-	stringIndex uint16
+	StringIndex uint16 `json:"string_index"`
 }
 
 func NewStringInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -146,5 +146,5 @@ func NewStringInfo(reader *bufio.Reader) (CpInfo, error) {
 		return nil, err
 	}
 
-	return StringInfo{stringIndex: stringIndex}, nil
+	return StringInfo{StringIndex: stringIndex}, nil
 }

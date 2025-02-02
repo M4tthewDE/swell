@@ -8,7 +8,12 @@ import (
 func Run(className string) error {
 	classFilePath := fmt.Sprintf("%s.class", className)
 
-	_, err := class.NewClass(classFilePath)
+	class, err := class.NewClass(classFilePath)
+	if err != nil {
+		return err
+	}
+
+	err = class.PrettyPrint()
 	if err != nil {
 		return err
 	}

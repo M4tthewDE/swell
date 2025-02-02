@@ -5,10 +5,10 @@ import (
 )
 
 type Method struct {
-	accessFlags     uint16
-	nameIndex       uint16
-	descriptorIndex uint16
-	attributes      []Attribute
+	AccessFlags     uint16      `json:"access_flags"`
+	NameIndex       uint16      `json:"name_index"`
+	DescriptorIndex uint16      `json:"descriptor_index"`
+	Attributes      []Attribute `json:"attributes"`
 }
 
 func NewMethods(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Method, error) {
@@ -52,9 +52,9 @@ func NewMethod(reader *bufio.Reader, cp *ConstantPool) (*Method, error) {
 	}
 
 	return &Method{
-			accessFlags:     accessFlags,
-			nameIndex:       nameIndex,
-			descriptorIndex: descriptorIndex,
-			attributes:      attributes},
+			AccessFlags:     accessFlags,
+			NameIndex:       nameIndex,
+			DescriptorIndex: descriptorIndex,
+			Attributes:      attributes},
 		nil
 }
