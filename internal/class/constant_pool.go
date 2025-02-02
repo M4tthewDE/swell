@@ -33,6 +33,13 @@ func NewConstantPool(reader *bufio.Reader, count uint16) (*ConstantPool, error) 
 	return &ConstantPool{Infos: infos}, nil
 }
 
+const UTF8_TAG = 1
+const CLASS_TAG = 7
+const STRING_TAG = 8
+const FIELDREF_TAG = 9
+const METHODREF_TAG = 10
+const NAME_AND_TYPE_TAG = 12
+
 type CpInfo interface{}
 
 func NewCpInfo(reader *bufio.Reader) (*CpInfo, error) {
@@ -43,17 +50,17 @@ func NewCpInfo(reader *bufio.Reader) (*CpInfo, error) {
 
 	var info CpInfo
 	switch tag {
-	case 1:
+	case UTF8_TAG:
 		info, err = NewUtf8Info(reader)
-	case 7:
+	case CLASS_TAG:
 		info, err = NewClassInfo(reader)
-	case 8:
+	case STRING_TAG:
 		info, err = NewStringInfo(reader)
-	case 9:
+	case FIELDREF_TAG:
 		info, err = NewRefInfo(reader)
-	case 10:
+	case METHODREF_TAG:
 		info, err = NewRefInfo(reader)
-	case 12:
+	case NAME_AND_TYPE_TAG:
 		info, err = NewNameAndTypeInfo(reader)
 	default:
 		return nil, errors.New(fmt.Sprintf("unknown tag: %d", tag))
