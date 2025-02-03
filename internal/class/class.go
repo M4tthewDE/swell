@@ -13,6 +13,7 @@ var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
 type Class struct {
 	ConstantPool ConstantPool `json:"constant_pool"`
 	Methods      []Method     `json:"methods"`
+	Fields       []Field      `json:"fields"`
 	Attributes   []Attribute  `json:"attributes"`
 }
 
@@ -70,9 +71,28 @@ func NewClass(reader *bufio.Reader) (*Class, error) {
 		return nil, err
 	}
 
-	// skip to methods_count (this relies on interfaces and fields being 0)
+	// skip to fields
 	// FIXME: parse these
-	_, err = reader.Discard(10)
+	_, err = reader.Discard(6)
+	if err != nil {
+		return nil, err
+	}
+
+	interfacesCount, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	if interfacesCount != 0 {
+		return nil, errors.New("interface parsing not implemented")
+	}
+
+	fieldsCount, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	fields, err := NewFields(reader, fieldsCount, constantPool)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +120,7 @@ func NewClass(reader *bufio.Reader) (*Class, error) {
 	return &Class{
 		ConstantPool: *constantPool,
 		Methods:      methods,
+		Fields:       fields,
 		Attributes:   attributes,
 	}, nil
 }
