@@ -9,6 +9,12 @@ type Attribute interface {
 	Name() string
 }
 
+type UnknownAttribute struct{}
+
+func (u UnknownAttribute) Name() string {
+	return "Unknown"
+}
+
 func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attribute, error) {
 	attributes := make([]Attribute, count)
 	for i := range count {
@@ -29,7 +35,7 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 		return nil, err
 	}
 
-	_, err = readUint32(reader)
+	length, err := readUint32(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +57,13 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	case "RuntimeVisibleAnnotations":
 		return NewRuntimeVisibleAnnotationsAttribute(reader)
 	default:
-		return nil, errors.New("unknown attribute: " + name)
+		// skip unknown attributes
+		_, err = reader.Discard(int(length))
+		if err != nil {
+			return nil, err
+		}
+
+		return UnknownAttribute{}, nil
 	}
 }
 
