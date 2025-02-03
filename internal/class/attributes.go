@@ -67,10 +67,47 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	}
 }
 
+type Exception struct {
+	StartPc   uint16
+	EndPc     uint16
+	HandlerPc uint16
+	CatchType uint16
+}
+
+func NewException(reader *bufio.Reader) (*Exception, error) {
+	startPc, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	endPc, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	handlerPc, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	catchType, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Exception{
+		StartPc:   startPc,
+		EndPc:     endPc,
+		HandlerPc: handlerPc,
+		CatchType: catchType,
+	}, nil
+}
+
 type CodeAttribute struct {
 	MaxStack   uint16      `json:"max_stack"`
 	MaxLocals  uint16      `json:"max_locals"`
 	Code       []byte      `json:"code"`
+	Exceptions []Exception `json:"exceptions"`
 	Attributes []Attribute `json:"attributes"`
 }
 
@@ -102,8 +139,14 @@ func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error)
 		return nil, err
 	}
 
-	if exceptionTableLength != 0 {
-		return nil, errors.New("exceptions not supported")
+	exceptions := make([]Exception, exceptionTableLength)
+	for i := range exceptionTableLength {
+		exception, err := NewException(reader)
+		if err != nil {
+			return nil, err
+		}
+
+		exceptions[i] = *exception
 	}
 
 	attributesCount, err := readUint16(reader)
@@ -120,6 +163,7 @@ func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error)
 		MaxStack:   maxStack,
 		MaxLocals:  maxLocals,
 		Code:       code,
+		Exceptions: exceptions,
 		Attributes: attributes,
 	}, nil
 }
