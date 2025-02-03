@@ -52,7 +52,12 @@ type Runner struct {
 }
 
 func NewRunner(code []byte, class class.Class) Runner {
-	return Runner{code: code, pc: 0, currentClass: class}
+	return Runner{
+		code:         code,
+		pc:           0,
+		currentClass: class,
+		loader:       loader.NewLoader(),
+	}
 
 }
 

@@ -12,10 +12,11 @@ import (
 )
 
 type Loader struct {
+	classes map[string]class.Class
 }
 
 func NewLoader() Loader {
-	return Loader{}
+	return Loader{classes: make(map[string]class.Class)}
 }
 
 func (l *Loader) Load(className string) error {
@@ -28,12 +29,14 @@ func (l *Loader) Load(className string) error {
 
 	reader := bufio.NewReader(r)
 
-	_, err = class.NewClass(reader)
+	class, err := class.NewClass(reader)
 	if err != nil {
 		return err
 	}
 
-	return errors.New("not implemented: load")
+	l.classes[className] = *class
+
+	return nil
 }
 
 func getReader(className string) (io.ReadCloser, error) {
