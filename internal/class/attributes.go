@@ -46,6 +46,10 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 		return NewLineNumberTableAttribute(reader)
 	case "SourceFile":
 		return NewSourceFileAttribute(reader)
+	case "ConstantValue":
+		return NewConstantValueAttribute(reader)
+	case "RuntimeVisibleAnnotations":
+		return NewRuntimeVisibleAnnotationsAttribute(reader)
 	default:
 		return nil, errors.New("unknown attribute: " + name)
 	}
@@ -164,4 +168,69 @@ func NewSourceFileAttribute(reader *bufio.Reader) (Attribute, error) {
 	}
 
 	return SourceFileAttribute{SourceFileIndex: sourceFileIndex}, nil
+}
+
+type ConstantValueAttribute struct {
+	ConstantValueIndex uint16 `json:"constant_value_index"`
+}
+
+func (c ConstantValueAttribute) Name() string {
+	return "ConstantValue"
+}
+
+func NewConstantValueAttribute(reader *bufio.Reader) (Attribute, error) {
+	constantValueIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return ConstantValueAttribute{ConstantValueIndex: constantValueIndex}, nil
+}
+
+type Annotation struct {
+	TypeIndex uint16 `json:"type_index"`
+}
+
+func NewAnnotation(reader *bufio.Reader) (*Annotation, error) {
+	typeIndex, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	numElementValuePairs, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	if numElementValuePairs != 0 {
+		return nil, errors.New("TODO: parse element value pairs")
+	}
+
+	return &Annotation{TypeIndex: typeIndex}, nil
+}
+
+type RuntimeVisibleAnnotationsAttribute struct {
+	Annotations []Annotation `json:"annotations"`
+}
+
+func (r RuntimeVisibleAnnotationsAttribute) Name() string {
+	return "RuntimeVisibleAnnotations"
+}
+
+func NewRuntimeVisibleAnnotationsAttribute(reader *bufio.Reader) (Attribute, error) {
+	numAnnotations, err := readUint16(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	annotations := make([]Annotation, numAnnotations)
+	for i := range numAnnotations {
+		annotation, err := NewAnnotation(reader)
+		if err != nil {
+			return nil, err
+		}
+		annotations[i] = *annotation
+	}
+
+	return RuntimeVisibleAnnotationsAttribute{Annotations: annotations}, nil
 }
