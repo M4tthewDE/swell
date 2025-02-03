@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"os"
 )
 
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
@@ -42,20 +41,11 @@ func (c *Class) GetMainMethod() (*Method, error) {
 	return nil, errors.New("no main method found")
 }
 
-func NewClass(path string) (*Class, error) {
-	log.Printf("parsing %s", path)
-
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
+func NewClass(reader *bufio.Reader) (*Class, error) {
+	log.Println("parsing class")
 
 	magic := make([]byte, 4)
-	_, err = reader.Read(magic)
+	_, err := reader.Read(magic)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +71,7 @@ func NewClass(path string) (*Class, error) {
 	}
 
 	// skip to methods_count (this relies on interfaces and fields being 0)
+	// FIXME: parse these
 	_, err = reader.Discard(10)
 	if err != nil {
 		return nil, err

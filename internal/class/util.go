@@ -3,6 +3,7 @@ package class
 import (
 	"bufio"
 	"encoding/binary"
+	"io"
 )
 
 func readUint8(reader *bufio.Reader) (uint8, error) {
@@ -16,7 +17,7 @@ func readUint8(reader *bufio.Reader) (uint8, error) {
 
 func readUint16(reader *bufio.Reader) (uint16, error) {
 	data := make([]byte, 2)
-	_, err := reader.Read(data)
+	_, err := io.ReadFull(reader, data)
 	if err != nil {
 		return 0, err
 	}
@@ -26,7 +27,7 @@ func readUint16(reader *bufio.Reader) (uint16, error) {
 
 func readUint32(reader *bufio.Reader) (uint32, error) {
 	data := make([]byte, 4)
-	_, err := reader.Read(data)
+	_, err := io.ReadFull(reader, data)
 	if err != nil {
 		return 0, err
 	}

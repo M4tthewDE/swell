@@ -2,6 +2,7 @@ package class
 
 import (
 	"bufio"
+	"errors"
 )
 
 const MAIN_DESCRIPTOR = "([Ljava/lang/String;)V"
@@ -44,6 +45,16 @@ func (m Method) isPublic() bool {
 
 func (m Method) isStatic() bool {
 	return (m.AccessFlags & ACC_STATIC) != 0
+}
+
+func (m Method) CodeAttribute() (*CodeAttribute, error) {
+	for _, attribute := range m.Attributes {
+		if codeAttribute, ok := attribute.(CodeAttribute); ok {
+			return &codeAttribute, nil
+		}
+	}
+
+	return nil, errors.New("no code attribute found")
 }
 
 func NewMethods(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Method, error) {
