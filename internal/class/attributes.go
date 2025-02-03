@@ -2,7 +2,6 @@ package class
 
 import (
 	"bufio"
-	"errors"
 )
 
 type Attribute interface {
@@ -54,8 +53,6 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 		return NewSourceFileAttribute(reader)
 	case "ConstantValue":
 		return NewConstantValueAttribute(reader)
-	case "RuntimeVisibleAnnotations":
-		return NewRuntimeVisibleAnnotationsAttribute(reader)
 	default:
 		// skip unknown attributes
 		_, err = reader.Discard(int(length))
@@ -241,52 +238,4 @@ func NewConstantValueAttribute(reader *bufio.Reader) (Attribute, error) {
 	}
 
 	return ConstantValueAttribute{ConstantValueIndex: constantValueIndex}, nil
-}
-
-type Annotation struct {
-	TypeIndex uint16 `json:"type_index"`
-}
-
-func NewAnnotation(reader *bufio.Reader) (*Annotation, error) {
-	typeIndex, err := readUint16(reader)
-	if err != nil {
-		return nil, err
-	}
-
-	numElementValuePairs, err := readUint16(reader)
-	if err != nil {
-		return nil, err
-	}
-
-	if numElementValuePairs != 0 {
-		return nil, errors.New("TODO: parse element value pairs")
-	}
-
-	return &Annotation{TypeIndex: typeIndex}, nil
-}
-
-type RuntimeVisibleAnnotationsAttribute struct {
-	Annotations []Annotation `json:"annotations"`
-}
-
-func (r RuntimeVisibleAnnotationsAttribute) Name() string {
-	return "RuntimeVisibleAnnotations"
-}
-
-func NewRuntimeVisibleAnnotationsAttribute(reader *bufio.Reader) (Attribute, error) {
-	numAnnotations, err := readUint16(reader)
-	if err != nil {
-		return nil, err
-	}
-
-	annotations := make([]Annotation, numAnnotations)
-	for i := range numAnnotations {
-		annotation, err := NewAnnotation(reader)
-		if err != nil {
-			return nil, err
-		}
-		annotations[i] = *annotation
-	}
-
-	return RuntimeVisibleAnnotationsAttribute{Annotations: annotations}, nil
 }
