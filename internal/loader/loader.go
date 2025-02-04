@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"log"
 	"os"
 	"strings"
 
@@ -25,6 +26,8 @@ func (l *Loader) Load(className string) (*class.Class, error) {
 		return &c, nil
 	}
 
+	log.Printf("loading class %s", className)
+
 	r, err := getReader(className)
 	if err != nil {
 		return nil, err
@@ -34,7 +37,7 @@ func (l *Loader) Load(className string) (*class.Class, error) {
 
 	reader := bufio.NewReader(r)
 
-	class, err := class.NewClass(reader)
+	class, err := class.NewClass(reader, className)
 	if err != nil {
 		return nil, err
 	}

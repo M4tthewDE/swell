@@ -12,7 +12,6 @@ import (
 func Run(className string) error {
 	runner := NewRunner()
 
-	log.Println("executing main method")
 	return runner.runMain(className)
 }
 
@@ -48,7 +47,7 @@ func (r *Runner) runMain(className string) error {
 
 	main, ok, err := c.GetMainMethod()
 	if !ok {
-		return nil
+		return errors.New("no main method found")
 	}
 
 	if err != nil {
@@ -59,22 +58,25 @@ func (r *Runner) runMain(className string) error {
 }
 
 const GET_STATIC = 0xb2
+const INVOKE_STATIC = 0xb8
 
 func (r *Runner) run(code []byte) error {
 	for {
 		instruction := code[r.pc]
 
+		var err error
 		switch instruction {
 		case GET_STATIC:
-			err := r.getStatic(code)
-			if err != nil {
-				return err
-			}
+			err = r.getStatic(code)
+		case INVOKE_STATIC:
+			err = r.invokeStatic(code)
 		default:
-			return errors.New(
+			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
 			)
 		}
+
+		return err
 	}
 }
 
@@ -110,11 +112,28 @@ func (r *Runner) getStatic(code []byte) error {
 	return errors.New("not implemented: getstatic")
 }
 
+func (r *Runner) invokeStatic(code []byte) error {
+	index := (uint16(code[r.pc+1]) | uint16(code[r.pc+2]))
+	r.pc += 2
+
+	log.Println(index)
+	log.Println(r.currentClass.Name)
+
+	_, err := r.currentClass.ConstantPool.Ref(index)
+	if err != nil {
+		return err
+	}
+
+	return errors.New("not implemented: invokestatic")
+}
+
 func (r *Runner) initializeClass(className string) error {
 	c, err := r.loader.Load(className)
 	if err != nil {
 		return err
 	}
+
+	r.currentClass = c
 
 	clinit, ok, err := c.GetClinitMethod()
 	if !ok {

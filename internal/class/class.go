@@ -11,6 +11,7 @@ import (
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
 
 type Class struct {
+	Name         string       `json:"name"`
 	ConstantPool ConstantPool `json:"constant_pool"`
 	Methods      []Method     `json:"methods"`
 	Fields       []Field      `json:"fields"`
@@ -57,9 +58,7 @@ func (c *Class) GetClinitMethod() (*Method, bool, error) {
 	return nil, false, nil
 }
 
-func NewClass(reader *bufio.Reader) (*Class, error) {
-	log.Println("parsing class")
-
+func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 	magic := make([]byte, 4)
 	_, err := reader.Read(magic)
 	if err != nil {
@@ -133,6 +132,7 @@ func NewClass(reader *bufio.Reader) (*Class, error) {
 	}
 
 	return &Class{
+		Name:         name,
 		ConstantPool: *constantPool,
 		Methods:      methods,
 		Fields:       fields,
