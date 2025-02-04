@@ -20,6 +20,11 @@ func NewLoader() Loader {
 }
 
 func (l *Loader) Load(className string) (*class.Class, error) {
+	c, ok := l.classes[className]
+	if ok {
+		return &c, nil
+	}
+
 	r, err := getReader(className)
 	if err != nil {
 		return nil, err

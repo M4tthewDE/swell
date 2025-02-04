@@ -39,7 +39,23 @@ func (r *Runner) runMain(className string) error {
 		return err
 	}
 
-	return nil
+	c, err := r.loader.Load(className)
+	if err != nil {
+		return err
+	}
+
+	r.currentClass = c
+
+	main, ok, err := c.GetMainMethod()
+	if !ok {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return r.runMethod(main)
 }
 
 const GET_STATIC = 0xb2
@@ -95,16 +111,21 @@ func (r *Runner) getStatic(code []byte) error {
 }
 
 func (r *Runner) initializeClass(className string) error {
-	class, err := r.loader.Load(className)
+	c, err := r.loader.Load(className)
+	if err != nil {
+		return err
+	}
+
+	clinit, ok, err := c.GetClinitMethod()
+	if !ok {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
 
 	log.Printf("running <clinit> for %s", className)
-	clinit, err := class.GetClinitMethod()
-	if err != nil {
-		return err
-	}
 
 	return r.runMethod(clinit)
 }

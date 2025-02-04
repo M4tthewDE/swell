@@ -27,34 +27,34 @@ func (c *Class) PrettyPrint() error {
 	return nil
 }
 
-func (c *Class) GetMainMethod() (*Method, error) {
+func (c *Class) GetMainMethod() (*Method, bool, error) {
 	for _, m := range c.Methods {
 		isMain, err := m.IsMain(&c.ConstantPool)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		if isMain {
-			return &m, nil
+			return &m, true, nil
 		}
 	}
 
-	return nil, errors.New("no main method found")
+	return nil, false, nil
 }
 
-func (c *Class) GetClinitMethod() (*Method, error) {
+func (c *Class) GetClinitMethod() (*Method, bool, error) {
 	for _, m := range c.Methods {
 		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		if name == "<clinit>" {
-			return &m, nil
+			return &m, true, nil
 		}
 	}
 
-	return nil, errors.New("no <clinit> method found")
+	return nil, false, nil
 }
 
 func NewClass(reader *bufio.Reader) (*Class, error) {
