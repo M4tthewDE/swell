@@ -35,27 +35,22 @@ func Run(className string) error {
 
 	log.Println("executing main method")
 
-	codeAttribute, err := method.CodeAttribute()
-	if err != nil {
-		return err
-	}
-
-	runner := NewRunner(codeAttribute.Code, *class)
-	return runner.run()
+	runner := NewRunner(*class)
+	return runner.runMethod(method)
 }
 
 type Runner struct {
 	currentClass class.Class
-	code         []byte
 	pc           int
+	returnPc     int
 	loader       loader.Loader
 }
 
-func NewRunner(code []byte, class class.Class) Runner {
+func NewRunner(class class.Class) Runner {
 	return Runner{
-		code:         code,
-		pc:           0,
 		currentClass: class,
+		pc:           0,
+		returnPc:     0,
 		loader:       loader.NewLoader(),
 	}
 
@@ -63,13 +58,16 @@ func NewRunner(code []byte, class class.Class) Runner {
 
 const GET_STATIC = 0xb2
 
-func (r *Runner) run() error {
+func (r *Runner) run(code []byte) error {
 	for {
-		instruction := r.code[r.pc]
+		instruction := code[r.pc]
 
 		switch instruction {
 		case GET_STATIC:
-			return r.getStatic()
+			err := r.getStatic(code)
+			if err != nil {
+				return err
+			}
 		default:
 			return errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -78,8 +76,8 @@ func (r *Runner) run() error {
 	}
 }
 
-func (r *Runner) getStatic() error {
-	index := (uint16(r.code[r.pc+1]) | uint16(r.code[r.pc+2]))
+func (r *Runner) getStatic(code []byte) error {
+	index := (uint16(code[r.pc+1]) | uint16(code[r.pc+2]))
 	r.pc += 2
 
 	refInfo, err := r.currentClass.ConstantPool.Ref(index)
@@ -87,7 +85,12 @@ func (r *Runner) getStatic() error {
 		return err
 	}
 
-	err = r.resolve(refInfo)
+	err = r.initializeClass(refInfo.ClassIndex)
+	if err != nil {
+		return err
+	}
+
+	err = r.resolveField(refInfo)
 	if err != nil {
 		return err
 	}
@@ -95,8 +98,8 @@ func (r *Runner) getStatic() error {
 	return errors.New("not implemented: getstatic")
 }
 
-func (r *Runner) resolve(refInfo *class.RefInfo) error {
-	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
+func (r *Runner) initializeClass(classIndex uint16) error {
+	classInfo, err := r.currentClass.ConstantPool.Class(classIndex)
 	if err != nil {
 		return err
 	}
@@ -106,10 +109,38 @@ func (r *Runner) resolve(refInfo *class.RefInfo) error {
 		return err
 	}
 
-	err = r.loader.Load(className)
+	class, err := r.loader.Load(className)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("running <clinit> for %s", className)
+	clinit, err := class.GetClinitMethod()
+	if err != nil {
+		return err
+	}
+
+	return r.runMethod(clinit)
+}
+
+func (r *Runner) runMethod(method *class.Method) error {
+	codeAttribute, err := method.CodeAttribute()
+	if err != nil {
+		return err
+	}
+
+	r.returnPc = r.pc
+	r.pc = 0
+
+	err = r.run(codeAttribute.Code)
+	if err != nil {
+		return err
+	}
+
+	r.pc = r.returnPc
+	return nil
+}
+
+func (r *Runner) resolveField(refInfo *class.RefInfo) error {
 	return errors.New("not implemented: field resolution")
 }

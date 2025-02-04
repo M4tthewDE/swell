@@ -19,10 +19,10 @@ func NewLoader() Loader {
 	return Loader{classes: make(map[string]class.Class)}
 }
 
-func (l *Loader) Load(className string) error {
+func (l *Loader) Load(className string) (*class.Class, error) {
 	r, err := getReader(className)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer r.Close()
@@ -31,12 +31,12 @@ func (l *Loader) Load(className string) error {
 
 	class, err := class.NewClass(reader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	l.classes[className] = *class
 
-	return nil
+	return class, nil
 }
 
 func getReader(className string) (io.ReadCloser, error) {

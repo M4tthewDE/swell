@@ -42,6 +42,21 @@ func (c *Class) GetMainMethod() (*Method, error) {
 	return nil, errors.New("no main method found")
 }
 
+func (c *Class) GetClinitMethod() (*Method, error) {
+	for _, m := range c.Methods {
+		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		if name == "<clinit>" {
+			return &m, nil
+		}
+	}
+
+	return nil, errors.New("no <clinit> method found")
+}
+
 func NewClass(reader *bufio.Reader) (*Class, error) {
 	log.Println("parsing class")
 
