@@ -61,5 +61,18 @@ func getReader(className string) (io.ReadCloser, error) {
 		}
 	}
 
-	return nil, errors.New("class not found in jmods: " + className)
+	dirEntries, err := os.ReadDir(".")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range dirEntries {
+		if entry.Name() == className+".class" {
+			if !entry.IsDir() {
+				return os.Open("./" + entry.Name())
+			}
+		}
+	}
+
+	return nil, errors.New("class not found: " + className)
 }

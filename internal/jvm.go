@@ -1,59 +1,45 @@
 package internal
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/m4tthewde/swell/internal/class"
 	"github.com/m4tthewde/swell/internal/loader"
 )
 
 func Run(className string) error {
-	classFilePath := fmt.Sprintf("%s.class", className)
-
-	file, err := os.Open(classFilePath)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-
-	class, err := class.NewClass(reader)
-	if err != nil {
-		return err
-	}
-
-	method, err := class.GetMainMethod()
-	if err != nil {
-		return err
-	}
+	runner := NewRunner()
 
 	log.Println("executing main method")
-
-	runner := NewRunner(*class)
-	return runner.runMethod(method)
+	return runner.runMain(className)
 }
 
 type Runner struct {
-	currentClass class.Class
+	currentClass *class.Class
 	pc           int
 	returnPc     int
 	loader       loader.Loader
 }
 
-func NewRunner(class class.Class) Runner {
+func NewRunner() Runner {
 	return Runner{
-		currentClass: class,
+		currentClass: nil,
 		pc:           0,
 		returnPc:     0,
 		loader:       loader.NewLoader(),
 	}
 
+}
+
+func (r *Runner) runMain(className string) error {
+	err := r.initializeClass(className)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 const GET_STATIC = 0xb2
@@ -85,7 +71,17 @@ func (r *Runner) getStatic(code []byte) error {
 		return err
 	}
 
-	err = r.initializeClass(refInfo.ClassIndex)
+	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
+	if err != nil {
+		return err
+	}
+
+	className, err := r.currentClass.ConstantPool.GetUtf8(classInfo.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	err = r.initializeClass(className)
 	if err != nil {
 		return err
 	}
@@ -98,17 +94,7 @@ func (r *Runner) getStatic(code []byte) error {
 	return errors.New("not implemented: getstatic")
 }
 
-func (r *Runner) initializeClass(classIndex uint16) error {
-	classInfo, err := r.currentClass.ConstantPool.Class(classIndex)
-	if err != nil {
-		return err
-	}
-
-	className, err := r.currentClass.ConstantPool.GetUtf8(classInfo.NameIndex)
-	if err != nil {
-		return err
-	}
-
+func (r *Runner) initializeClass(className string) error {
 	class, err := r.loader.Load(className)
 	if err != nil {
 		return err
