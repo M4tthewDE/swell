@@ -19,3 +19,15 @@ func TestMethodDescriptor(t *testing.T) {
 	assert.Equal(t, parameters, methodDescriptor.Parameters)
 	assert.Equal(t, ObjectType("java/lang/Object"), methodDescriptor.ReturnDescriptor)
 }
+
+func TestMethodDescriptorArray(t *testing.T) {
+	parameters := []FieldType{
+		ArrayType(ObjectType("java/lang/String")),
+	}
+
+	methodDescriptor, err := NewMethodDescriptor("([Ljava/lang/String;)V")
+	assert.Nil(t, err)
+	assert.NotNil(t, methodDescriptor)
+	assert.Equal(t, parameters, methodDescriptor.Parameters)
+	assert.Equal(t, 'V', methodDescriptor.ReturnDescriptor)
+}

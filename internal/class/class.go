@@ -43,14 +43,14 @@ func (c *Class) GetMainMethod() (*Method, bool, error) {
 	return nil, false, nil
 }
 
-func (c *Class) GetClinitMethod() (*Method, bool, error) {
+func (c *Class) GetMethod(methodName string) (*Method, bool, error) {
 	for _, m := range c.Methods {
 		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
 		if err != nil {
 			return nil, false, err
 		}
 
-		if name == "<clinit>" {
+		if name == methodName {
 			return &m, true, nil
 		}
 	}

@@ -21,6 +21,7 @@ type Runner struct {
 	pc                    int
 	returnPc              int
 	loader                loader.Loader
+	stack                 Stack
 }
 
 func NewRunner() Runner {
@@ -30,6 +31,7 @@ func NewRunner() Runner {
 		pc:                    0,
 		returnPc:              0,
 		loader:                loader.NewLoader(),
+		stack:                 NewStack(),
 	}
 
 }
@@ -56,7 +58,12 @@ func (r *Runner) runMain(className string) error {
 		return err
 	}
 
-	return r.runMethod(main)
+	code, err := main.CodeAttribute()
+	if err != nil {
+		return err
+	}
+
+	return r.runMethod(code.Code, "main", make([]Value, 0))
 }
 
 const GET_STATIC = 0xb2
@@ -142,25 +149,43 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
+	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	method, ok, err := r.currentClass.GetMethod(methodName)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return errors.New("method not found")
+	}
+
 	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
 	if err != nil {
 		return err
 	}
-	log.Println(descriptor)
 
 	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
 	if err != nil {
 		return err
 	}
 
-	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
-	if err != nil {
-		return err
+	if !method.IsNative() {
+		return errors.New("not implemented: non native static methods")
+	} else {
+		return errors.New("not implemented: native static methods")
 	}
 
-	log.Println(methodName)
-	log.Println(methodDescriptor)
+	_ = r.popOperands(len(methodDescriptor.Parameters))
+
 	return errors.New("not implemented: invokestatic")
+}
+
+func (r *Runner) popOperands(count int) []Value {
+	return r.stack.PopOperands(count)
 }
 
 func (r *Runner) initializeClass(className string) error {
@@ -177,7 +202,7 @@ func (r *Runner) initializeClass(className string) error {
 
 	r.currentClass = c
 
-	clinit, ok, err := c.GetClinitMethod()
+	clinit, ok, err := r.currentClass.GetMethod("<clinit>")
 	if !ok {
 		return nil
 	}
@@ -186,21 +211,23 @@ func (r *Runner) initializeClass(className string) error {
 		return err
 	}
 
-	log.Printf("running <clinit> for %s", className)
-
-	return r.runMethod(clinit)
-}
-
-func (r *Runner) runMethod(method *class.Method) error {
-	codeAttribute, err := method.CodeAttribute()
+	code, err := clinit.CodeAttribute()
 	if err != nil {
 		return err
 	}
 
+	log.Printf("running <clinit> for %s", className)
+
+	return r.runMethod(code.Code, "clinit", make([]Value, 0))
+}
+
+func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
+	r.stack.Push(name, parameters)
+
 	r.returnPc = r.pc
 	r.pc = 0
 
-	err = r.run(codeAttribute.Code)
+	err := r.run(code)
 	if err != nil {
 		return err
 	}

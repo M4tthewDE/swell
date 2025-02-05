@@ -3,6 +3,7 @@ package class
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -43,16 +44,22 @@ func NewBaseType(r rune) (BaseType, error) {
 type ObjectType string
 
 func NewObjectType(objectType string) (ObjectType, error) {
-	if objectType[0] != 'L' || objectType[len(objectType)-1] != ';' {
+	if objectType[0] != 'L' {
 		return "", errors.New(fmt.Sprintf("invalid object type: %s", string(objectType)))
 	}
 
-	return ObjectType(objectType[1 : len(objectType)-1]), nil
+	index := strings.Index(objectType, ";")
+	if index == -1 {
+		return "", errors.New("invalid object type")
+	}
+
+	return ObjectType(objectType[1:index]), nil
 }
 
 type ArrayType FieldType
 
 func NewArrayType(arrayType string) (ArrayType, error) {
+	log.Println(arrayType)
 	if arrayType[0] != '[' {
 		return "", errors.New(fmt.Sprintf("invalid array type: %s", string(arrayType)))
 	}
