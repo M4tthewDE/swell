@@ -50,6 +50,14 @@ func (cp *ConstantPool) Class(n uint16) (*ClassInfo, error) {
 	return nil, errors.New(fmt.Sprintf("no class info found at %d", n))
 }
 
+func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
+	if info, ok := cp.Infos[n-1].(NameAndTypeInfo); ok {
+		return &info, nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("no NameAndType info found at %d", n))
+}
+
 const UTF8_TAG = 1
 const INTEGER_TAG = 3
 const CLASS_TAG = 7

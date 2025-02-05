@@ -16,18 +16,20 @@ func Run(className string) error {
 }
 
 type Runner struct {
-	currentClass *class.Class
-	pc           int
-	returnPc     int
-	loader       loader.Loader
+	currentClass          *class.Class
+	classBeingInitialized string
+	pc                    int
+	returnPc              int
+	loader                loader.Loader
 }
 
 func NewRunner() Runner {
 	return Runner{
-		currentClass: nil,
-		pc:           0,
-		returnPc:     0,
-		loader:       loader.NewLoader(),
+		currentClass:          nil,
+		classBeingInitialized: "",
+		pc:                    0,
+		returnPc:              0,
+		loader:                loader.NewLoader(),
 	}
 
 }
@@ -81,7 +83,7 @@ func (r *Runner) run(code []byte) error {
 }
 
 func (r *Runner) getStatic(code []byte) error {
-	index := (uint16(code[r.pc+1]) | uint16(code[r.pc+2]))
+	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 2
 
 	refInfo, err := r.currentClass.ConstantPool.Ref(index)
@@ -113,21 +115,61 @@ func (r *Runner) getStatic(code []byte) error {
 }
 
 func (r *Runner) invokeStatic(code []byte) error {
-	index := (uint16(code[r.pc+1]) | uint16(code[r.pc+2]))
+	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 2
 
-	log.Println(index)
-	log.Println(r.currentClass.Name)
-
-	_, err := r.currentClass.ConstantPool.Ref(index)
+	ref, err := r.currentClass.ConstantPool.Ref(index)
 	if err != nil {
 		return err
 	}
 
+	c, err := r.currentClass.ConstantPool.Class(ref.ClassIndex)
+	if err != nil {
+		return err
+	}
+
+	className, err := r.currentClass.ConstantPool.GetUtf8(c.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	if err = r.initializeClass(className); err != nil {
+		return err
+	}
+
+	nameAndType, err := r.currentClass.ConstantPool.NameAndType(ref.NameAndTypeIndex)
+	if err != nil {
+		return err
+	}
+
+	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
+	if err != nil {
+		return err
+	}
+	log.Println(descriptor)
+
+	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
+	if err != nil {
+		return err
+	}
+
+	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	log.Println(methodName)
+	log.Println(methodDescriptor)
 	return errors.New("not implemented: invokestatic")
 }
 
 func (r *Runner) initializeClass(className string) error {
+	if r.classBeingInitialized == className {
+		return nil
+	} else {
+		r.classBeingInitialized = className
+	}
+
 	c, err := r.loader.Load(className)
 	if err != nil {
 		return err
