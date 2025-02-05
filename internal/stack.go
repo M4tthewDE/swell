@@ -71,3 +71,8 @@ func (s *Stack) PopOperands(count int) []Value {
 	frame := s.frames[len(s.frames)-1]
 	return frame.operands
 }
+
+func (s *Stack) PushOperand(operand Value) {
+	frame := s.frames[len(s.frames)-1]
+	frame.operands = append(frame.operands, operand)
+}

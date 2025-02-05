@@ -173,15 +173,22 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
+	operands := r.popOperands(len(methodDescriptor.Parameters))
+
 	if !method.IsNative() {
 		return errors.New("not implemented: non native static methods")
 	} else {
-		return errors.New("not implemented: native static methods")
+		val, err := r.RunNative(method, operands)
+		if err != nil {
+			return err
+		}
+
+		if val != nil {
+			r.stack.PushOperand(val)
+		}
 	}
 
-	_ = r.popOperands(len(methodDescriptor.Parameters))
-
-	return errors.New("not implemented: invokestatic")
+	return nil
 }
 
 func (r *Runner) popOperands(count int) []Value {
@@ -236,6 +243,32 @@ func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
 	return nil
 }
 
-func (r *Runner) resolveField(refInfo *class.RefInfo) error {
+func (r *Runner) resolveField(_ *class.RefInfo) error {
 	return errors.New("not implemented: field resolution")
+}
+
+func (r *Runner) RunNative(method *class.Method, operands []Value) (Value, error) {
+	descriptor, err := r.currentClass.ConstantPool.GetUtf8(method.DescriptorIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
+	if err != nil {
+		return nil, err
+	}
+
+	methodName, err := r.currentClass.ConstantPool.GetUtf8(method.NameIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.currentClass.Name == "java/lang/System" &&
+		methodName == "registerNatives" &&
+		methodDescriptor.ReturnDescriptor == 'V' &&
+		len(methodDescriptor.Parameters) == 0 {
+		return nil, nil
+	} else {
+		return nil, errors.New("native method not implemented")
+	}
 }
