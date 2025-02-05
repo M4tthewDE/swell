@@ -1,7 +1,39 @@
 package internal
 
+import (
+	"errors"
+
+	"github.com/google/uuid"
+	"github.com/m4tthewde/swell/internal/class"
+)
+
 type Value interface {
 	isValue()
+}
+
+func DefaultValue(typ class.FieldType) (Value, error) {
+	switch typ.(type) {
+	case BooleanValue:
+		return BooleanValue{value: false}, nil
+	case ByteValue:
+		return ByteValue{value: 0}, nil
+	case ShortValue:
+		return ShortValue{value: 0}, nil
+	case IntValue:
+		return IntValue{value: 0}, nil
+	case LongValue:
+		return LongValue{value: 0}, nil
+	case CharValue:
+		return CharValue{value: 0}, nil
+	case FloatValue:
+		return FloatValue{value: 0}, nil
+	case DoubleValue:
+		return DoubleValue{value: 0}, nil
+	case ReferenceValue:
+		return ReferenceValue{value: nil}, nil
+	default:
+		return nil, errors.New("unknown field type")
+	}
 }
 
 type BooleanValue struct {
@@ -36,14 +68,19 @@ type DoubleValue struct {
 	value float64
 }
 
-func (b BooleanValue) isValue() {}
-func (b ByteValue) isValue()    {}
-func (b ShortValue) isValue()   {}
-func (b IntValue) isValue()     {}
-func (b LongValue) isValue()    {}
-func (b CharValue) isValue()    {}
-func (b FloatValue) isValue()   {}
-func (b DoubleValue) isValue()  {}
+type ReferenceValue struct {
+	value *uuid.UUID
+}
+
+func (b BooleanValue) isValue()   {}
+func (b ByteValue) isValue()      {}
+func (b ShortValue) isValue()     {}
+func (b IntValue) isValue()       {}
+func (b LongValue) isValue()      {}
+func (b CharValue) isValue()      {}
+func (b FloatValue) isValue()     {}
+func (b DoubleValue) isValue()    {}
+func (b ReferenceValue) isValue() {}
 
 type Frame struct {
 	methodName string

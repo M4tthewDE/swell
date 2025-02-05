@@ -22,6 +22,7 @@ type Runner struct {
 	returnPc              int
 	loader                loader.Loader
 	stack                 Stack
+	heap                  Heap
 }
 
 func NewRunner() Runner {
@@ -32,6 +33,7 @@ func NewRunner() Runner {
 		returnPc:              0,
 		loader:                loader.NewLoader(),
 		stack:                 NewStack(),
+		heap:                  NewHeap(),
 	}
 
 }
@@ -113,7 +115,19 @@ func (r *Runner) new(code []byte) error {
 		return err
 	}
 
-	return errors.New("not implemented: new")
+	c, err := r.loader.Load(className)
+	if err != nil {
+		return err
+	}
+
+	id, err := r.heap.Allocate(c)
+	if err != nil {
+		return err
+	}
+
+	reference := ReferenceValue{value: id}
+	r.stack.PushOperand(reference)
+	return nil
 }
 
 func (r *Runner) getStatic(code []byte) error {
@@ -150,7 +164,7 @@ func (r *Runner) getStatic(code []byte) error {
 		return err
 	}
 
-	field, ok, err := r.currentClass.GetFIeld(fieldName)
+	_, ok, err := r.currentClass.GetField(fieldName)
 	if err != nil {
 		return err
 	}
@@ -158,9 +172,6 @@ func (r *Runner) getStatic(code []byte) error {
 	if !ok {
 		return errors.New("static field not found")
 	}
-
-	log.Println(field)
-	log.Println(fieldName)
 
 	return errors.New("not implemented: getstatic")
 }
@@ -279,6 +290,7 @@ func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
 	log.Printf("running method '%s'", name)
 	r.stack.Push(name, parameters)
 
+	oldClass := r.currentClass
 	r.returnPc = r.pc
 	r.pc = 0
 
@@ -287,6 +299,7 @@ func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
 		return err
 	}
 
+	r.currentClass = oldClass
 	r.pc = r.returnPc
 	return nil
 }

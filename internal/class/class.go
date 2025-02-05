@@ -63,7 +63,7 @@ func (c *Class) GetMethod(methodName string) (*Method, bool, error) {
 
 // TODO: name is not enough to find the correct field
 // will have to use descriptor in the future
-func (c *Class) GetFIeld(fieldName string) (*Field, bool, error) {
+func (c *Class) GetField(fieldName string) (*Field, bool, error) {
 	for _, f := range c.Fields {
 		name, err := c.ConstantPool.GetUtf8(f.NameIndex)
 		if err != nil {
