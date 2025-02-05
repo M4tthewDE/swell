@@ -43,6 +43,8 @@ func (c *Class) GetMainMethod() (*Method, bool, error) {
 	return nil, false, nil
 }
 
+// TODO: name is not enough to find the correct method
+// will have to use descriptor in the future
 func (c *Class) GetMethod(methodName string) (*Method, bool, error) {
 	for _, m := range c.Methods {
 		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
@@ -52,6 +54,23 @@ func (c *Class) GetMethod(methodName string) (*Method, bool, error) {
 
 		if name == methodName {
 			return &m, true, nil
+		}
+	}
+
+	return nil, false, nil
+}
+
+// TODO: name is not enough to find the correct field
+// will have to use descriptor in the future
+func (c *Class) GetFIeld(fieldName string) (*Field, bool, error) {
+	for _, f := range c.Fields {
+		name, err := c.ConstantPool.GetUtf8(f.NameIndex)
+		if err != nil {
+			return nil, false, err
+		}
+
+		if name == fieldName {
+			return &f, true, nil
 		}
 	}
 

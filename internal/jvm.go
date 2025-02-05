@@ -76,8 +76,10 @@ func (r *Runner) run(code []byte) error {
 		var err error
 		switch instruction {
 		case GET_STATIC:
+			log.Println("getstatic")
 			err = r.getStatic(code)
 		case INVOKE_STATIC:
+			log.Println("invokestatic")
 			err = r.invokeStatic(code)
 		default:
 			err = errors.New(
@@ -113,10 +115,27 @@ func (r *Runner) getStatic(code []byte) error {
 		return err
 	}
 
-	err = r.resolveField(refInfo)
+	nameAndType, err := r.currentClass.ConstantPool.NameAndType(refInfo.NameAndTypeIndex)
 	if err != nil {
 		return err
 	}
+
+	fieldName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	field, ok, err := r.currentClass.GetFIeld(fieldName)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return errors.New("static field not found")
+	}
+
+	log.Println(field)
+	log.Println(fieldName)
 
 	return errors.New("not implemented: getstatic")
 }
@@ -154,6 +173,8 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
+	log.Println(methodName)
+
 	method, ok, err := r.currentClass.GetMethod(methodName)
 	if err != nil {
 		return err
@@ -176,7 +197,12 @@ func (r *Runner) invokeStatic(code []byte) error {
 	operands := r.popOperands(len(methodDescriptor.Parameters))
 
 	if !method.IsNative() {
-		return errors.New("not implemented: non native static methods")
+		code, err := method.CodeAttribute()
+		if err != nil {
+			return err
+		}
+
+		return r.runMethod(code.Code, methodName, operands)
 	} else {
 		val, err := r.RunNative(method, operands)
 		if err != nil {
@@ -243,10 +269,6 @@ func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
 	return nil
 }
 
-func (r *Runner) resolveField(_ *class.RefInfo) error {
-	return errors.New("not implemented: field resolution")
-}
-
 func (r *Runner) RunNative(method *class.Method, operands []Value) (Value, error) {
 	descriptor, err := r.currentClass.ConstantPool.GetUtf8(method.DescriptorIndex)
 	if err != nil {
@@ -267,7 +289,22 @@ func (r *Runner) RunNative(method *class.Method, operands []Value) (Value, error
 		methodName == "registerNatives" &&
 		methodDescriptor.ReturnDescriptor == 'V' &&
 		len(methodDescriptor.Parameters) == 0 {
-		return nil, nil
+
+		method, ok, err := r.currentClass.GetMethod("initPhase1")
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, errors.New("method 'initPhase1' not found")
+		}
+
+		code, err := method.CodeAttribute()
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, r.runMethod(code.Code, "initPhase1", make([]Value, 0))
 	} else {
 		return nil, errors.New("native method not implemented")
 	}
