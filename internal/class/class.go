@@ -14,6 +14,7 @@ type Class struct {
 	Name         string       `json:"name"`
 	ConstantPool ConstantPool `json:"constant_pool"`
 	Methods      []Method     `json:"methods"`
+	Interfaces   []uint16     `json:"interfaces"`
 	Fields       []Field      `json:"fields"`
 	Attributes   []Attribute  `json:"attributes"`
 }
@@ -104,8 +105,7 @@ func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 		return nil, err
 	}
 
-	// skip to fields
-	// FIXME: parse these
+	// skip to interfaces
 	_, err = reader.Discard(6)
 	if err != nil {
 		return nil, err
@@ -116,8 +116,13 @@ func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 		return nil, err
 	}
 
-	if interfacesCount != 0 {
-		return nil, errors.New("interface parsing not implemented")
+	interfaces := make([]uint16, interfacesCount)
+	for i := range interfacesCount {
+		interfaceIndex, err := readUint16(reader)
+		if err != nil {
+			return nil, err
+		}
+		interfaces[i] = interfaceIndex
 	}
 
 	fieldsCount, err := readUint16(reader)
@@ -155,6 +160,7 @@ func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 		ConstantPool: *constantPool,
 		Methods:      methods,
 		Fields:       fields,
+		Interfaces:   interfaces,
 		Attributes:   attributes,
 	}, nil
 }

@@ -68,6 +68,7 @@ func (r *Runner) runMain(className string) error {
 
 const GET_STATIC = 0xb2
 const INVOKE_STATIC = 0xb8
+const NEW = 0xbb
 
 func (r *Runner) run(code []byte) error {
 	for {
@@ -76,11 +77,14 @@ func (r *Runner) run(code []byte) error {
 		var err error
 		switch instruction {
 		case GET_STATIC:
-			log.Println("getstatic")
+			log.Println("executing getstatic")
 			err = r.getStatic(code)
 		case INVOKE_STATIC:
-			log.Println("invokestatic")
+			log.Println("executing invokestatic")
 			err = r.invokeStatic(code)
+		case NEW:
+			log.Println("executing new")
+			err = r.new(code)
 		default:
 			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -89,6 +93,27 @@ func (r *Runner) run(code []byte) error {
 
 		return err
 	}
+}
+func (r *Runner) new(code []byte) error {
+	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
+	r.pc += 2
+
+	class, err := r.currentClass.ConstantPool.Class(index)
+	if err != nil {
+		return err
+	}
+
+	className, err := r.currentClass.ConstantPool.GetUtf8(class.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	err = r.initializeClass(className)
+	if err != nil {
+		return err
+	}
+
+	return errors.New("not implemented: new")
 }
 
 func (r *Runner) getStatic(code []byte) error {
@@ -173,8 +198,6 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
-	log.Println(methodName)
-
 	method, ok, err := r.currentClass.GetMethod(methodName)
 	if err != nil {
 		return err
@@ -249,12 +272,11 @@ func (r *Runner) initializeClass(className string) error {
 		return err
 	}
 
-	log.Printf("running <clinit> for %s", className)
-
 	return r.runMethod(code.Code, "clinit", make([]Value, 0))
 }
 
 func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
+	log.Printf("running method '%s'", name)
 	r.stack.Push(name, parameters)
 
 	r.returnPc = r.pc
