@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
 	"github.com/m4tthewde/swell/internal/loader"
@@ -65,7 +66,12 @@ func (r *Runner) runMain(className string) error {
 		return err
 	}
 
-	return r.runMethod(code.Code, "main", make([]Value, 0))
+	err = r.runMethod(code.Code, "main", make([]Value, 0))
+	if err != nil {
+		r.PrintStacktrace()
+	}
+
+	return err
 }
 
 const GET_STATIC = 0xb2
@@ -93,12 +99,19 @@ func (r *Runner) run(code []byte) error {
 			)
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		if r.pc >= len(code)-1 {
+			return nil
+		}
+
 	}
 }
 func (r *Runner) new(code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 2
+	r.pc += 3
 
 	class, err := r.currentClass.ConstantPool.Class(index)
 	if err != nil {
@@ -125,14 +138,14 @@ func (r *Runner) new(code []byte) error {
 		return err
 	}
 
-	reference := ReferenceValue{value: id}
-	r.stack.PushOperand(reference)
+	r.stack.PushOperand(ReferenceValue{value: id})
+
 	return nil
 }
 
 func (r *Runner) getStatic(code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 2
+	r.pc += 3
 
 	refInfo, err := r.currentClass.ConstantPool.Ref(index)
 	if err != nil {
@@ -173,12 +186,12 @@ func (r *Runner) getStatic(code []byte) error {
 		return errors.New("static field not found")
 	}
 
-	return errors.New("not implemented: getstatic")
+	return errors.New(fmt.Sprintf("not implemented: getstatic %s", fieldName))
 }
 
 func (r *Runner) invokeStatic(code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 2
+	r.pc += 3
 
 	ref, err := r.currentClass.ConstantPool.Ref(index)
 	if err != nil {
@@ -286,9 +299,21 @@ func (r *Runner) initializeClass(className string) error {
 	return r.runMethod(code.Code, "clinit", make([]Value, 0))
 }
 
+func (r *Runner) PrintStacktrace() {
+	stackTrace := "\n"
+	for i := len(r.stack.frames) - 1; i >= 0; i-- {
+		frame := r.stack.frames[i]
+		className := strings.ReplaceAll(frame.className, "/", ".")
+		stackTrace += fmt.Sprintf("\t%s.%s()\n", className, frame.methodName)
+	}
+
+	stackTrace = stackTrace[:len(stackTrace)-1]
+	log.Println(stackTrace)
+}
+
 func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
-	log.Printf("running method '%s'", name)
-	r.stack.Push(name, parameters)
+	log.Printf("running method '%s' % x", name, code)
+	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass
 	r.returnPc = r.pc

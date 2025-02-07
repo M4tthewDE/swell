@@ -83,12 +83,13 @@ func (b DoubleValue) isValue()    {}
 func (b ReferenceValue) isValue() {}
 
 type Frame struct {
+	className  string
 	methodName string
 	operands   []Value
 }
 
-func NewFrame(methodName string, operands []Value) Frame {
-	return Frame{methodName: methodName, operands: operands}
+func NewFrame(className string, methodName string, operands []Value) Frame {
+	return Frame{className: className, methodName: methodName, operands: operands}
 }
 
 type Stack struct {
@@ -99,8 +100,8 @@ func NewStack() Stack {
 	return Stack{frames: make([]Frame, 0)}
 }
 
-func (s *Stack) Push(methodName string, operands []Value) {
-	frame := NewFrame(methodName, operands)
+func (s *Stack) Push(className string, methodName string, operands []Value) {
+	frame := NewFrame(className, methodName, operands)
 	s.frames = append(s.frames, frame)
 }
 
