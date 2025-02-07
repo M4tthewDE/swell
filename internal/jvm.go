@@ -77,6 +77,7 @@ func (r *Runner) runMain(className string) error {
 const GET_STATIC = 0xb2
 const INVOKE_STATIC = 0xb8
 const NEW = 0xbb
+const DUP = 0x59
 
 func (r *Runner) run(code []byte) error {
 	for {
@@ -93,6 +94,9 @@ func (r *Runner) run(code []byte) error {
 		case NEW:
 			log.Println("executing new")
 			err = r.new(code)
+		case DUP:
+			log.Println("executing dup")
+			err = r.dup()
 		default:
 			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -109,6 +113,14 @@ func (r *Runner) run(code []byte) error {
 
 	}
 }
+
+func (r *Runner) dup() error {
+	r.pc += 1
+	operand := r.stack.GetOperand()
+	r.stack.PushOperand(operand)
+	return nil
+}
+
 func (r *Runner) new(code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
@@ -241,7 +253,7 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
-	operands := r.popOperands(len(methodDescriptor.Parameters))
+	operands := r.stack.PopOperands(len(methodDescriptor.Parameters))
 
 	if !method.IsNative() {
 		code, err := method.CodeAttribute()
@@ -262,10 +274,6 @@ func (r *Runner) invokeStatic(code []byte) error {
 	}
 
 	return nil
-}
-
-func (r *Runner) popOperands(count int) []Value {
-	return r.stack.PopOperands(count)
 }
 
 func (r *Runner) initializeClass(className string) error {
