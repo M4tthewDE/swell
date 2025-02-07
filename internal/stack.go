@@ -107,7 +107,11 @@ func (s *Stack) Push(className string, methodName string, operands []Value) {
 
 func (s *Stack) PopOperands(count int) []Value {
 	frame := s.frames[len(s.frames)-1]
-	return frame.operands
+	operands := frame.operands[len(frame.operands)-count:]
+
+	frame.operands = frame.operands[:len(frame.operands)-count]
+	s.frames[len(s.frames)-1] = frame
+	return operands
 }
 
 func (s *Stack) PushOperand(operand Value) {

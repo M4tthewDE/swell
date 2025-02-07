@@ -7,7 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStack(t *testing.T) {
+func TestStackPush(t *testing.T) {
+	stack := NewStack()
+	stack.Push("Main", "main", []Value{})
+
+	value, err := DefaultValue(class.BOOLEAN)
+	assert.NotNil(t, err)
+
+	stack.PushOperand(value)
+
+	operands := stack.PopOperands(1)
+	assert.Equal(t, value, operands[0])
+}
+
+func TestStackPop(t *testing.T) {
 	value, err := DefaultValue(class.BOOLEAN)
 	assert.NotNil(t, err)
 
@@ -17,9 +30,5 @@ func TestStack(t *testing.T) {
 	operands := stack.PopOperands(1)
 	assert.Equal(t, value, operands[0])
 
-	stack.PushOperand(value)
-
-	operands = stack.PopOperands(2)
-	assert.Equal(t, value, operands[0])
-	assert.Equal(t, value, operands[1])
+	assert.Panics(t, func() { stack.PopOperands(1) })
 }
