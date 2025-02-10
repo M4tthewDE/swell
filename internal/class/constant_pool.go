@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 )
 
 type ConstantPool struct {
@@ -60,6 +61,7 @@ func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
 
 const UTF8_TAG = 1
 const INTEGER_TAG = 3
+const LONG_TAG = 5
 const CLASS_TAG = 7
 const STRING_TAG = 8
 const FIELDREF_TAG = 9
@@ -79,10 +81,12 @@ func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
 	}
 
 	switch tag {
-	case INTEGER_TAG:
-		return NewIntegerInfo(reader)
 	case UTF8_TAG:
 		return NewUtf8Info(reader)
+	case INTEGER_TAG:
+		return NewIntegerInfo(reader)
+	case LONG_TAG:
+		return NewLongInfo(reader)
 	case CLASS_TAG:
 		return NewClassInfo(reader)
 	case STRING_TAG:
@@ -209,6 +213,19 @@ func NewInvokeDynamicInfo(reader *bufio.Reader) (CpInfo, error) {
 		BootstrapMethodAttributeIndex: bootstrapMethodAttributeIndex,
 		NameAndTypeIndex:              nameAndTypeIndex,
 	}, nil
+}
+
+type LongInfo struct {
+	Value uint64 `json:"value"`
+}
+
+func NewLongInfo(reader *bufio.Reader) (CpInfo, error) {
+	value, err := readUint64(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return LongInfo{Value: value}, nil
 }
 
 type IntegerInfo struct {

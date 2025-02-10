@@ -34,3 +34,13 @@ func readUint32(reader *bufio.Reader) (uint32, error) {
 
 	return binary.BigEndian.Uint32(data), nil
 }
+
+func readUint64(reader *bufio.Reader) (uint64, error) {
+	data := make([]byte, 8)
+	_, err := io.ReadFull(reader, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint64(data), nil
+}
