@@ -74,6 +74,7 @@ func (r *Runner) runMain(className string) error {
 	return err
 }
 
+const ALOAD_0 = 0x2a
 const GET_STATIC = 0xb2
 const INVOKE_SPECIAL = 0xb7
 const INVOKE_STATIC = 0xb8
@@ -86,6 +87,9 @@ func (r *Runner) run(code []byte) error {
 
 		var err error
 		switch instruction {
+		case ALOAD_0:
+			log.Println("executing aload_0")
+			err = r.aload(0)
 		case GET_STATIC:
 			log.Println("executing getstatic")
 			err = r.getStatic(code)
@@ -117,6 +121,19 @@ func (r *Runner) run(code []byte) error {
 
 	}
 }
+
+func (r *Runner) aload(n int) error {
+	r.pc += 1
+	variable := r.stack.GetLocalVariable(n)
+
+	if reference, ok := variable.(ReferenceValue); ok {
+		r.stack.PushOperand(reference)
+		return nil
+	}
+
+	return errors.New("invalid variable type")
+}
+
 func (r *Runner) invokeSpecial(code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
@@ -180,7 +197,8 @@ func (r *Runner) invokeSpecial(code []byte) error {
 		return err
 	}
 
-	operands := r.stack.PopOperands(len(methodDescriptor.Parameters))
+	operands := r.stack.PopOperands(1)
+	operands = append(operands, r.stack.PopOperands(len(methodDescriptor.Parameters))...)
 
 	r.currentClass = c
 	return r.runMethod(codeAttribute.Code, methodName, operands)
@@ -394,7 +412,7 @@ func (r *Runner) PrintStacktrace() {
 }
 
 func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
-	log.Printf("running method '%s' % x", name, code)
+	log.Printf("running method '%s' % x with %d parameters", name, code, len(parameters))
 	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass

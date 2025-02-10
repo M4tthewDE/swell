@@ -83,13 +83,14 @@ func (b DoubleValue) isValue()    {}
 func (b ReferenceValue) isValue() {}
 
 type Frame struct {
-	className  string
-	methodName string
-	operands   []Value
+	className      string
+	methodName     string
+	operands       []Value
+	localVariables []Value
 }
 
-func NewFrame(className string, methodName string, operands []Value) Frame {
-	return Frame{className: className, methodName: methodName, operands: operands}
+func NewFrame(className string, methodName string, localVariables []Value) Frame {
+	return Frame{className: className, methodName: methodName, operands: make([]Value, 0), localVariables: localVariables}
 }
 
 type Stack struct {
@@ -100,8 +101,8 @@ func NewStack() Stack {
 	return Stack{frames: make([]Frame, 0)}
 }
 
-func (s *Stack) Push(className string, methodName string, operands []Value) {
-	frame := NewFrame(className, methodName, operands)
+func (s *Stack) Push(className string, methodName string, localVariables []Value) {
+	frame := NewFrame(className, methodName, localVariables)
 	s.frames = append(s.frames, frame)
 }
 
@@ -123,4 +124,9 @@ func (s *Stack) PushOperand(operand Value) {
 func (s *Stack) GetOperand() Value {
 	frame := s.frames[len(s.frames)-1]
 	return frame.operands[len(frame.operands)-1]
+}
+
+func (s *Stack) GetLocalVariable(n int) Value {
+	frame := s.frames[len(s.frames)-1]
+	return frame.localVariables[n]
 }
