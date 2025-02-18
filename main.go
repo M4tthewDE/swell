@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/m4tthewde/swell/internal"
+	"github.com/m4tthewde/swell/internal/jvm"
 	"github.com/m4tthewde/swell/internal/logger"
 )
 
@@ -24,7 +24,7 @@ func main() {
 
 	ctx := logger.OnContext(context.Background(), log)
 
-	err = internal.Run(ctx, className)
+	err = jvm.Run(ctx, className)
 	if err != nil {
 		log.Fatalln(err)
 	}

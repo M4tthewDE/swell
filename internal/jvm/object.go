@@ -1,4 +1,4 @@
-package internal
+package jvm
 
 import (
 	"github.com/google/uuid"
