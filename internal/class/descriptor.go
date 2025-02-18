@@ -3,7 +3,6 @@ package class
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -59,7 +58,6 @@ func NewObjectType(objectType string) (ObjectType, error) {
 type ArrayType FieldType
 
 func NewArrayType(arrayType string) (ArrayType, error) {
-	log.Println(arrayType)
 	if arrayType[0] != '[' {
 		return "", errors.New(fmt.Sprintf("invalid array type: %s", string(arrayType)))
 	}

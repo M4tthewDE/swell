@@ -1,19 +1,20 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
 	"github.com/m4tthewde/swell/internal/loader"
+	"github.com/m4tthewde/swell/internal/logger"
 )
 
-func Run(className string) error {
+func Run(ctx context.Context, className string) error {
 	runner := NewRunner()
 
-	return runner.runMain(className)
+	return runner.runMain(ctx, className)
 }
 
 type Runner struct {
@@ -39,13 +40,13 @@ func NewRunner() Runner {
 
 }
 
-func (r *Runner) runMain(className string) error {
-	err := r.initializeClass(className)
+func (r *Runner) runMain(ctx context.Context, className string) error {
+	err := r.initializeClass(ctx, className)
 	if err != nil {
 		return err
 	}
 
-	c, err := r.loader.Load(className)
+	c, err := r.loader.Load(ctx, className)
 	if err != nil {
 		return err
 	}
@@ -66,9 +67,9 @@ func (r *Runner) runMain(className string) error {
 		return err
 	}
 
-	err = r.runMethod(code.Code, "main", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, "main", make([]Value, 0))
 	if err != nil {
-		r.PrintStacktrace()
+		r.PrintStacktrace(ctx)
 	}
 
 	return err
@@ -81,30 +82,32 @@ const INVOKE_STATIC = 0xb8
 const NEW = 0xbb
 const DUP = 0x59
 
-func (r *Runner) run(code []byte) error {
+func (r *Runner) run(ctx context.Context, code []byte) error {
+	log := logger.FromContext(ctx)
+
 	for {
 		instruction := code[r.pc]
 
 		var err error
 		switch instruction {
 		case ALOAD_0:
-			log.Println("executing aload_0")
+			log.Info("executing aload_0")
 			err = r.aload(0)
 		case GET_STATIC:
-			log.Println("executing getstatic")
-			err = r.getStatic(code)
+			log.Info("executing getstatic")
+			err = r.getStatic(ctx, code)
 		case INVOKE_STATIC:
-			log.Println("executing invokestatic")
-			err = r.invokeStatic(code)
+			log.Info("executing invokestatic")
+			err = r.invokeStatic(ctx, code)
 		case NEW:
-			log.Println("executing new")
-			err = r.new(code)
+			log.Info("executing new")
+			err = r.new(ctx, code)
 		case DUP:
-			log.Println("executing dup")
+			log.Info("executing dup")
 			err = r.dup()
 		case INVOKE_SPECIAL:
-			log.Println("executing invokespecial")
-			err = r.invokeSpecial(code)
+			log.Info("executing invokespecial")
+			err = r.invokeSpecial(ctx, code)
 		default:
 			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -134,7 +137,7 @@ func (r *Runner) aload(n int) error {
 	return errors.New("invalid variable type")
 }
 
-func (r *Runner) invokeSpecial(code []byte) error {
+func (r *Runner) invokeSpecial(ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -153,12 +156,12 @@ func (r *Runner) invokeSpecial(code []byte) error {
 		return err
 	}
 
-	err = r.initializeClass(className)
+	err = r.initializeClass(ctx, className)
 	if err != nil {
 		return err
 	}
 
-	c, err := r.loader.Load(className)
+	c, err := r.loader.Load(ctx, className)
 	if err != nil {
 		return err
 	}
@@ -201,7 +204,7 @@ func (r *Runner) invokeSpecial(code []byte) error {
 	operands = append(operands, r.stack.PopOperands(len(methodDescriptor.Parameters))...)
 
 	r.currentClass = c
-	return r.runMethod(codeAttribute.Code, methodName, operands)
+	return r.runMethod(ctx, codeAttribute.Code, methodName, operands)
 }
 
 func (r *Runner) dup() error {
@@ -211,7 +214,7 @@ func (r *Runner) dup() error {
 	return nil
 }
 
-func (r *Runner) new(code []byte) error {
+func (r *Runner) new(ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -226,13 +229,13 @@ func (r *Runner) new(code []byte) error {
 	}
 
 	oldClass := r.currentClass
-	err = r.initializeClass(className)
+	err = r.initializeClass(ctx, className)
 	if err != nil {
 		return err
 	}
 	r.currentClass = oldClass
 
-	c, err := r.loader.Load(className)
+	c, err := r.loader.Load(ctx, className)
 	if err != nil {
 		return err
 	}
@@ -247,7 +250,7 @@ func (r *Runner) new(code []byte) error {
 	return nil
 }
 
-func (r *Runner) getStatic(code []byte) error {
+func (r *Runner) getStatic(ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -266,7 +269,7 @@ func (r *Runner) getStatic(code []byte) error {
 		return err
 	}
 
-	err = r.initializeClass(className)
+	err = r.initializeClass(ctx, className)
 	if err != nil {
 		return err
 	}
@@ -293,7 +296,7 @@ func (r *Runner) getStatic(code []byte) error {
 	return errors.New(fmt.Sprintf("not implemented: getstatic %s", fieldName))
 }
 
-func (r *Runner) invokeStatic(code []byte) error {
+func (r *Runner) invokeStatic(ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -312,7 +315,7 @@ func (r *Runner) invokeStatic(code []byte) error {
 		return err
 	}
 
-	if err = r.initializeClass(className); err != nil {
+	if err = r.initializeClass(ctx, className); err != nil {
 		return err
 	}
 
@@ -353,9 +356,9 @@ func (r *Runner) invokeStatic(code []byte) error {
 			return err
 		}
 
-		return r.runMethod(code.Code, methodName, operands)
+		return r.runMethod(ctx, code.Code, methodName, operands)
 	} else {
-		val, err := r.RunNative(method, operands)
+		val, err := r.RunNative(ctx, method, operands)
 		if err != nil {
 			return err
 		}
@@ -368,14 +371,14 @@ func (r *Runner) invokeStatic(code []byte) error {
 	return nil
 }
 
-func (r *Runner) initializeClass(className string) error {
+func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	if r.classBeingInitialized == className {
 		return nil
 	} else {
 		r.classBeingInitialized = className
 	}
 
-	c, err := r.loader.Load(className)
+	c, err := r.loader.Load(ctx, className)
 	if err != nil {
 		return err
 	}
@@ -396,10 +399,12 @@ func (r *Runner) initializeClass(className string) error {
 		return err
 	}
 
-	return r.runMethod(code.Code, "clinit", make([]Value, 0))
+	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
 }
 
-func (r *Runner) PrintStacktrace() {
+func (r *Runner) PrintStacktrace(ctx context.Context) {
+	log := logger.FromContext(ctx)
+
 	stackTrace := "\n"
 	for i := len(r.stack.frames) - 1; i >= 0; i-- {
 		frame := r.stack.frames[i]
@@ -408,18 +413,22 @@ func (r *Runner) PrintStacktrace() {
 	}
 
 	stackTrace = stackTrace[:len(stackTrace)-1]
-	log.Println(stackTrace)
+	log.Info(stackTrace)
 }
 
-func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
-	log.Printf("running method '%s' % x with %d parameters", name, code, len(parameters))
+func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
+	log := logger.FromContext(ctx)
+
+	log.Infof("running method '%s'", name)
+	log.Debugf("with code % x", code)
+	log.Debugf("and %d parameters", len(parameters))
 	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass
 	r.returnPc = r.pc
 	r.pc = 0
 
-	err := r.run(code)
+	err := r.run(ctx, code)
 	if err != nil {
 		return err
 	}
@@ -429,7 +438,7 @@ func (r *Runner) runMethod(code []byte, name string, parameters []Value) error {
 	return nil
 }
 
-func (r *Runner) RunNative(method *class.Method, operands []Value) (Value, error) {
+func (r *Runner) RunNative(ctx context.Context, method *class.Method, operands []Value) (Value, error) {
 	descriptor, err := r.currentClass.ConstantPool.GetUtf8(method.DescriptorIndex)
 	if err != nil {
 		return nil, err
@@ -464,7 +473,7 @@ func (r *Runner) RunNative(method *class.Method, operands []Value) (Value, error
 			return nil, err
 		}
 
-		return nil, r.runMethod(code.Code, "initPhase1", make([]Value, 0))
+		return nil, r.runMethod(ctx, code.Code, "initPhase1", make([]Value, 0))
 	} else {
 		return nil, errors.New("native method not implemented")
 	}

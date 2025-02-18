@@ -1,14 +1,18 @@
 package main
 
 import (
-	"log"
+	"context"
 	"os"
 
 	"github.com/m4tthewde/swell/internal"
+	"github.com/m4tthewde/swell/internal/logger"
 )
 
 func main() {
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	log, err := logger.NewLogger()
+	if err != nil {
+		panic(err)
+	}
 
 	if len(os.Args) < 2 {
 		log.Fatalln("no class provided")
@@ -16,8 +20,11 @@ func main() {
 
 	className := os.Args[1]
 
-	log.Printf("running class %s\n", className)
-	err := internal.Run(className)
+	log.Infof("running class %s", className)
+
+	ctx := logger.OnContext(context.Background(), log)
+
+	err = internal.Run(ctx, className)
 	if err != nil {
 		log.Fatalln(err)
 	}

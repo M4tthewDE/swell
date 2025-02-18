@@ -3,13 +3,14 @@ package loader
 import (
 	"archive/zip"
 	"bufio"
+	"context"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/logger"
 )
 
 type Loader struct {
@@ -20,13 +21,15 @@ func NewLoader() Loader {
 	return Loader{classes: make(map[string]class.Class)}
 }
 
-func (l *Loader) Load(className string) (*class.Class, error) {
+func (l *Loader) Load(ctx context.Context, className string) (*class.Class, error) {
+	log := logger.FromContext(ctx)
+
 	c, ok := l.classes[className]
 	if ok {
 		return &c, nil
 	}
 
-	log.Printf("loading class %s", className)
+	log.Infof("loading class %s", className)
 
 	r, err := getReader(className)
 	if err != nil {

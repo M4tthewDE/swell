@@ -3,9 +3,7 @@ package class
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
-	"log"
 )
 
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
@@ -17,16 +15,6 @@ type Class struct {
 	Interfaces   []uint16     `json:"interfaces"`
 	Fields       []Field      `json:"fields"`
 	Attributes   []Attribute  `json:"attributes"`
-}
-
-func (c *Class) PrettyPrint() error {
-	data, err := json.MarshalIndent(c, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	log.Println(string(data))
-	return nil
 }
 
 func (c *Class) GetMainMethod() (*Method, bool, error) {
