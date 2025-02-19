@@ -2,6 +2,7 @@ package jvm
 
 import (
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/m4tthewde/swell/internal/class"
@@ -108,6 +109,7 @@ func (s *Stack) Push(className string, methodName string, localVariables []Value
 
 func (s *Stack) PopOperands(count int) []Value {
 	frame := s.frames[len(s.frames)-1]
+	log.Println(frame.operands)
 	operands := frame.operands[len(frame.operands)-count:]
 
 	frame.operands = frame.operands[:len(frame.operands)-count]

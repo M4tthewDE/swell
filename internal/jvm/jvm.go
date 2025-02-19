@@ -91,7 +91,6 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		var err error
 		switch instruction {
 		case ALOAD_0:
-			log.Info("executing aload_0")
 			err = aload(r, 0)
 		case GET_STATIC:
 			log.Info("executing getstatic")
