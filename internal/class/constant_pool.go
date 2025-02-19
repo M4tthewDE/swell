@@ -2,16 +2,20 @@ package class
 
 import (
 	"bufio"
-	"errors"
+	"context"
 	"fmt"
 	"io"
+
+	"github.com/m4tthewde/swell/internal/logger"
 )
 
 type ConstantPool struct {
 	Infos []CpInfo `json:"infos"`
 }
 
-func NewConstantPool(reader *bufio.Reader, count uint16) (*ConstantPool, error) {
+func NewConstantPool(ctx context.Context, reader *bufio.Reader, count uint16) (*ConstantPool, error) {
+	log := logger.FromContext(ctx)
+
 	infos := make([]CpInfo, count-1)
 
 	for i := range count - 1 {
@@ -19,6 +23,8 @@ func NewConstantPool(reader *bufio.Reader, count uint16) (*ConstantPool, error) 
 		if err != nil {
 			return nil, err
 		}
+
+		log.Debugf("cp info %d: %s", i, cpInfo)
 
 		infos[i] = cpInfo
 	}
@@ -39,7 +45,7 @@ func (cp *ConstantPool) Ref(n uint16) (*RefInfo, error) {
 		return &info, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("no ref info found at %d", n))
+	return nil, fmt.Errorf("no ref info found at %d", n)
 }
 
 func (cp *ConstantPool) Class(n uint16) (*ClassInfo, error) {
@@ -47,7 +53,7 @@ func (cp *ConstantPool) Class(n uint16) (*ClassInfo, error) {
 		return &info, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("no class info found at %d", n))
+	return nil, fmt.Errorf("no class info found at %d", n)
 }
 
 func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
@@ -55,7 +61,7 @@ func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
 		return &info, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("no NameAndType info found at %d", n))
+	return nil, fmt.Errorf("no NameAndType info found at %d", n)
 }
 
 const UTF8_TAG = 1
@@ -71,7 +77,9 @@ const METHOD_HANDLE_TAG = 15
 const METHOD_TYPE_TAG = 16
 const INVOKE_DYNAMIC_TAG = 18
 
-type CpInfo interface{}
+type CpInfo interface {
+	String() string
+}
 
 func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
 	tag, err := readUint8(reader)
@@ -105,13 +113,17 @@ func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
 	case INVOKE_DYNAMIC_TAG:
 		return NewInvokeDynamicInfo(reader)
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown tag: %d", tag))
+		return nil, fmt.Errorf("unknown tag: %d", tag)
 	}
 }
 
 type RefInfo struct {
 	ClassIndex       uint16 `json:"class_index"`
 	NameAndTypeIndex uint16 `json:"name_and_type_index"`
+}
+
+func (c RefInfo) String() string {
+	return fmt.Sprintf("RefInfo[ClassIndex: %d, NameAndTypeIndex: %d]", c.ClassIndex, c.NameAndTypeIndex)
 }
 
 func NewRefInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -132,6 +144,10 @@ type ClassInfo struct {
 	NameIndex uint16 `json:"name_index"`
 }
 
+func (c ClassInfo) String() string {
+	return fmt.Sprintf("ClassInfo[NameIndex: %d]", c.NameIndex)
+}
+
 func NewClassInfo(reader *bufio.Reader) (CpInfo, error) {
 	nameIndex, err := readUint16(reader)
 	if err != nil {
@@ -144,6 +160,10 @@ func NewClassInfo(reader *bufio.Reader) (CpInfo, error) {
 type NameAndTypeInfo struct {
 	NameIndex       uint16 `json:"name_index"`
 	DescriptorIndex uint16 `json:"descriptor_index"`
+}
+
+func (c NameAndTypeInfo) String() string {
+	return fmt.Sprintf("NameAndTypeInfo[NameIndex: %d, DescriptorIndex: %d]", c.NameIndex, c.DescriptorIndex)
 }
 
 func NewNameAndTypeInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -162,6 +182,10 @@ func NewNameAndTypeInfo(reader *bufio.Reader) (CpInfo, error) {
 
 type Utf8Info struct {
 	Content string `json:"content"`
+}
+
+func (c Utf8Info) String() string {
+	return fmt.Sprintf("Utf8Info['%s']", c.Content)
 }
 
 func NewUtf8Info(reader *bufio.Reader) (CpInfo, error) {
@@ -183,6 +207,10 @@ type StringInfo struct {
 	StringIndex uint16 `json:"string_index"`
 }
 
+func (c StringInfo) String() string {
+	return fmt.Sprintf("StringInfo[StringIndex: %d]", c.StringIndex)
+}
+
 func NewStringInfo(reader *bufio.Reader) (CpInfo, error) {
 	stringIndex, err := readUint16(reader)
 	if err != nil {
@@ -195,6 +223,10 @@ func NewStringInfo(reader *bufio.Reader) (CpInfo, error) {
 type InvokeDynamicInfo struct {
 	BootstrapMethodAttributeIndex uint16 `json:"bootstrap_method_attribute_index"`
 	NameAndTypeIndex              uint16 `json:"name_and_type_index"`
+}
+
+func (c InvokeDynamicInfo) String() string {
+	return fmt.Sprintf("InvokeDynamicInfo[BootstrapMethodAttributeIndex: %d, NameAndTypeIndex: %d]", c.BootstrapMethodAttributeIndex, c.NameAndTypeIndex)
 }
 
 func NewInvokeDynamicInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -218,6 +250,10 @@ type LongInfo struct {
 	Value uint64 `json:"value"`
 }
 
+func (c LongInfo) String() string {
+	return fmt.Sprintf("LongInfo[%d]", c.Value)
+}
+
 func NewLongInfo(reader *bufio.Reader) (CpInfo, error) {
 	value, err := readUint64(reader)
 	if err != nil {
@@ -229,6 +265,10 @@ func NewLongInfo(reader *bufio.Reader) (CpInfo, error) {
 
 type IntegerInfo struct {
 	Value uint32 `json:"value"`
+}
+
+func (c IntegerInfo) String() string {
+	return fmt.Sprintf("IntegerInfo[%d]", c.Value)
 }
 
 func NewIntegerInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -243,6 +283,10 @@ func NewIntegerInfo(reader *bufio.Reader) (CpInfo, error) {
 type MethodHandleInfo struct {
 	ReferenceKind  uint8  `json:"reference_kind"`
 	ReferenceIndex uint16 `json:"reference_index"`
+}
+
+func (c MethodHandleInfo) String() string {
+	return fmt.Sprintf("MethodHandleInfo[ReferenceKind: %d, ReferenceIndex: %d]", c.ReferenceKind, c.ReferenceIndex)
 }
 
 func NewMethodHandleInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -264,6 +308,10 @@ func NewMethodHandleInfo(reader *bufio.Reader) (CpInfo, error) {
 
 type MethodTypeInfo struct {
 	DescriptorIndex uint16 `json:"descriptor_index"`
+}
+
+func (c MethodTypeInfo) String() string {
+	return fmt.Sprintf("MethodTypeInfo[DescriptorIndex: %d]", c.DescriptorIndex)
 }
 
 func NewMethodTypeInfo(reader *bufio.Reader) (CpInfo, error) {

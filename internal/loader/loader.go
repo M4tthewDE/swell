@@ -40,7 +40,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 
 	reader := bufio.NewReader(r)
 
-	class, err := class.NewClass(reader, className)
+	class, err := class.NewClass(ctx, reader, className)
 	if err != nil {
 		return nil, err
 	}
