@@ -16,9 +16,10 @@ type ConstantPool struct {
 func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*ConstantPool, error) {
 	log := logger.FromContext(ctx)
 
-	infos := make([]CpInfo, count-1)
+	infos := make([]CpInfo, count)
+	infos[0] = ReservedInfo{}
 
-	for i := 0; i < count-1; i++ {
+	for i := 1; i < count; i++ {
 		cpInfo, err := NewCpInfo(reader)
 		if err != nil {
 			return nil, err
@@ -37,7 +38,7 @@ func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*Con
 }
 
 func (cp *ConstantPool) GetUtf8(n uint16) (string, error) {
-	if info, ok := cp.Infos[n-1].(Utf8Info); ok {
+	if info, ok := cp.Infos[n].(Utf8Info); ok {
 		return info.Content, nil
 	}
 
@@ -45,7 +46,7 @@ func (cp *ConstantPool) GetUtf8(n uint16) (string, error) {
 }
 
 func (cp *ConstantPool) Ref(n uint16) (*RefInfo, error) {
-	if info, ok := cp.Infos[n-1].(RefInfo); ok {
+	if info, ok := cp.Infos[n].(RefInfo); ok {
 		return &info, nil
 	}
 
@@ -53,7 +54,7 @@ func (cp *ConstantPool) Ref(n uint16) (*RefInfo, error) {
 }
 
 func (cp *ConstantPool) Class(n uint16) (*ClassInfo, error) {
-	if info, ok := cp.Infos[n-1].(ClassInfo); ok {
+	if info, ok := cp.Infos[n].(ClassInfo); ok {
 		return &info, nil
 	}
 
@@ -61,7 +62,7 @@ func (cp *ConstantPool) Class(n uint16) (*ClassInfo, error) {
 }
 
 func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
-	if info, ok := cp.Infos[n-1].(NameAndTypeInfo); ok {
+	if info, ok := cp.Infos[n].(NameAndTypeInfo); ok {
 		return &info, nil
 	}
 
@@ -83,6 +84,12 @@ const INVOKE_DYNAMIC_TAG = 18
 
 type CpInfo interface {
 	String() string
+}
+
+type ReservedInfo struct{}
+
+func (c ReservedInfo) String() string {
+	return fmt.Sprintf("ReservedInfo")
 }
 
 func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
