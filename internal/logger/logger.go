@@ -42,5 +42,4 @@ func FromContext(ctx context.Context) *zap.SugaredLogger {
 	}
 
 	panic("No logger found in context")
-	return nil
 }

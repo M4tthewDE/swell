@@ -92,22 +92,22 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		switch instruction {
 		case ALOAD_0:
 			log.Info("executing aload_0")
-			err = r.aload(0)
+			err = aload(r, 0)
 		case GET_STATIC:
 			log.Info("executing getstatic")
-			err = r.getStatic(ctx, code)
+			err = getStatic(r, ctx, code)
 		case INVOKE_STATIC:
 			log.Info("executing invokestatic")
-			err = r.invokeStatic(ctx, code)
+			err = invokeStatic(r, ctx, code)
 		case NEW:
 			log.Info("executing new")
-			err = r.new(ctx, code)
+			err = new(r, ctx, code)
 		case DUP:
 			log.Info("executing dup")
-			err = r.dup()
+			err = dup(r)
 		case INVOKE_SPECIAL:
 			log.Info("executing invokespecial")
-			err = r.invokeSpecial(ctx, code)
+			err = invokeSpecial(r, ctx, code)
 		default:
 			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -123,252 +123,6 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		}
 
 	}
-}
-
-func (r *Runner) aload(n int) error {
-	r.pc += 1
-	variable := r.stack.GetLocalVariable(n)
-
-	if reference, ok := variable.(ReferenceValue); ok {
-		r.stack.PushOperand(reference)
-		return nil
-	}
-
-	return errors.New("invalid variable type")
-}
-
-func (r *Runner) invokeSpecial(ctx context.Context, code []byte) error {
-	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 3
-
-	refInfo, err := r.currentClass.ConstantPool.Ref(index)
-	if err != nil {
-		return err
-	}
-
-	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
-	if err != nil {
-		return err
-	}
-
-	className, err := r.currentClass.ConstantPool.GetUtf8(classInfo.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	err = r.initializeClass(ctx, className)
-	if err != nil {
-		return err
-	}
-
-	c, err := r.loader.Load(ctx, className)
-	if err != nil {
-		return err
-	}
-
-	nameAndType, err := r.currentClass.ConstantPool.NameAndType(refInfo.NameAndTypeIndex)
-	if err != nil {
-		return err
-	}
-
-	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	method, ok, err := r.currentClass.GetMethod(methodName)
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		return errors.New("method not found")
-	}
-
-	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
-	if err != nil {
-		return err
-	}
-
-	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
-	if err != nil {
-		return err
-	}
-
-	codeAttribute, err := method.CodeAttribute()
-	if err != nil {
-		return err
-	}
-
-	operands := r.stack.PopOperands(1)
-	operands = append(operands, r.stack.PopOperands(len(methodDescriptor.Parameters))...)
-
-	r.currentClass = c
-	return r.runMethod(ctx, codeAttribute.Code, methodName, operands)
-}
-
-func (r *Runner) dup() error {
-	r.pc += 1
-	operand := r.stack.GetOperand()
-	r.stack.PushOperand(operand)
-	return nil
-}
-
-func (r *Runner) new(ctx context.Context, code []byte) error {
-	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 3
-
-	class, err := r.currentClass.ConstantPool.Class(index)
-	if err != nil {
-		return err
-	}
-
-	className, err := r.currentClass.ConstantPool.GetUtf8(class.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	oldClass := r.currentClass
-	err = r.initializeClass(ctx, className)
-	if err != nil {
-		return err
-	}
-	r.currentClass = oldClass
-
-	c, err := r.loader.Load(ctx, className)
-	if err != nil {
-		return err
-	}
-
-	id, err := r.heap.Allocate(c)
-	if err != nil {
-		return err
-	}
-
-	r.stack.PushOperand(ReferenceValue{value: id})
-
-	return nil
-}
-
-func (r *Runner) getStatic(ctx context.Context, code []byte) error {
-	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 3
-
-	refInfo, err := r.currentClass.ConstantPool.Ref(index)
-	if err != nil {
-		return err
-	}
-
-	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
-	if err != nil {
-		return err
-	}
-
-	className, err := r.currentClass.ConstantPool.GetUtf8(classInfo.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	err = r.initializeClass(ctx, className)
-	if err != nil {
-		return err
-	}
-
-	nameAndType, err := r.currentClass.ConstantPool.NameAndType(refInfo.NameAndTypeIndex)
-	if err != nil {
-		return err
-	}
-
-	fieldName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	_, ok, err := r.currentClass.GetField(fieldName)
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		return errors.New("static field not found")
-	}
-
-	return errors.New(fmt.Sprintf("not implemented: getstatic %s", fieldName))
-}
-
-func (r *Runner) invokeStatic(ctx context.Context, code []byte) error {
-	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
-	r.pc += 3
-
-	ref, err := r.currentClass.ConstantPool.Ref(index)
-	if err != nil {
-		return err
-	}
-
-	c, err := r.currentClass.ConstantPool.Class(ref.ClassIndex)
-	if err != nil {
-		return err
-	}
-
-	className, err := r.currentClass.ConstantPool.GetUtf8(c.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	if err = r.initializeClass(ctx, className); err != nil {
-		return err
-	}
-
-	nameAndType, err := r.currentClass.ConstantPool.NameAndType(ref.NameAndTypeIndex)
-	if err != nil {
-		return err
-	}
-
-	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
-	if err != nil {
-		return err
-	}
-
-	method, ok, err := r.currentClass.GetMethod(methodName)
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		return errors.New("method not found")
-	}
-
-	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
-	if err != nil {
-		return err
-	}
-
-	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
-	if err != nil {
-		return err
-	}
-
-	operands := r.stack.PopOperands(len(methodDescriptor.Parameters))
-
-	if !method.IsNative() {
-		code, err := method.CodeAttribute()
-		if err != nil {
-			return err
-		}
-
-		return r.runMethod(ctx, code.Code, methodName, operands)
-	} else {
-		val, err := r.RunNative(ctx, method, operands)
-		if err != nil {
-			return err
-		}
-
-		if val != nil {
-			r.stack.PushOperand(val)
-		}
-	}
-
-	return nil
 }
 
 func (r *Runner) initializeClass(ctx context.Context, className string) error {
