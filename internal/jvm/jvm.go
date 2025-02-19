@@ -63,7 +63,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 
 	err = r.runMethod(ctx, code.Code, "main", make([]Value, 0))
 	if err != nil {
-		return fmt.Errorf("%s\nerror: %v", r.getStacktrace(), err)
+		return err
 	}
 
 	return nil
@@ -149,17 +149,6 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
 }
 
-func (r *Runner) getStacktrace() string {
-	stackTrace := "\n"
-	for i := len(r.stack.frames) - 1; i >= 0; i-- {
-		frame := r.stack.frames[i]
-		className := strings.ReplaceAll(frame.className, "/", ".")
-		stackTrace += fmt.Sprintf("\t%s.%s()\n", className, frame.methodName)
-	}
-
-	return stackTrace[:len(stackTrace)-1]
-}
-
 func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
@@ -172,6 +161,8 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parame
 
 	err := r.run(ctx, code)
 	if err != nil {
+		r.currentClass = oldClass
+		err = fmt.Errorf("%v\n\t%s.%s()", err, strings.ReplaceAll(r.currentClass.Name, "/", "."), name)
 		return err
 	}
 
