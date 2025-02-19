@@ -11,12 +11,6 @@ import (
 	"github.com/m4tthewde/swell/internal/logger"
 )
 
-func Run(ctx context.Context, className string) error {
-	runner := NewRunner()
-
-	return runner.runMain(ctx, className)
-}
-
 type Runner struct {
 	currentClass          *class.Class
 	classBeingInitialized string
@@ -40,7 +34,7 @@ func NewRunner() Runner {
 
 }
 
-func (r *Runner) runMain(ctx context.Context, className string) error {
+func (r *Runner) RunMain(ctx context.Context, className string) error {
 	err := r.initializeClass(ctx, className)
 	if err != nil {
 		return err
@@ -69,7 +63,7 @@ func (r *Runner) runMain(ctx context.Context, className string) error {
 
 	err = r.runMethod(ctx, code.Code, "main", make([]Value, 0))
 	if err != nil {
-		r.PrintStacktrace(ctx)
+		r.printStacktrace(ctx)
 	}
 
 	return err
@@ -155,7 +149,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
 }
 
-func (r *Runner) PrintStacktrace(ctx context.Context) {
+func (r *Runner) printStacktrace(ctx context.Context) {
 	log := logger.FromContext(ctx)
 
 	stackTrace := "\n"
@@ -191,7 +185,7 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parame
 	return nil
 }
 
-func (r *Runner) RunNative(ctx context.Context, method *class.Method, operands []Value) (Value, error) {
+func (r *Runner) runNative(ctx context.Context, method *class.Method, operands []Value) (Value, error) {
 	descriptor, err := r.currentClass.ConstantPool.GetUtf8(method.DescriptorIndex)
 	if err != nil {
 		return nil, err

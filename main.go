@@ -23,8 +23,9 @@ func main() {
 	log.Infof("running class %s", className)
 
 	ctx := logger.OnContext(context.Background(), log)
+	runner := jvm.NewRunner()
 
-	err = jvm.Run(ctx, className)
+	err = runner.RunMain(ctx, className)
 	if err != nil {
 		log.Fatalln(err)
 	}
