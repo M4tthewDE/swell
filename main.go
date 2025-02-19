@@ -20,7 +20,7 @@ func main() {
 
 	className := os.Args[1]
 
-	log.Infof("running class %s", className)
+	log.Infof("running %s", className)
 
 	ctx := logger.OnContext(context.Background(), log)
 	runner := jvm.NewRunner()

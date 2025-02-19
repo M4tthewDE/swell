@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
@@ -90,7 +91,7 @@ func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 
 	constantPool, err := NewConstantPool(reader, constantPoolCount)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("constant pool in %s: %v", name, err)
 	}
 
 	// skip to interfaces

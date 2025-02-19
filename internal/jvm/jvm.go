@@ -63,10 +63,10 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 
 	err = r.runMethod(ctx, code.Code, "main", make([]Value, 0))
 	if err != nil {
-		r.printStacktrace(ctx)
+		return fmt.Errorf("%s\nerror: %v", r.getStacktrace(), err)
 	}
 
-	return err
+	return nil
 }
 
 const ALOAD_0 = 0x2a
@@ -87,19 +87,19 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case ALOAD_0:
 			err = aload(r, 0)
 		case GET_STATIC:
-			log.Info("executing getstatic")
+			log.Info("getstatic")
 			err = getStatic(r, ctx, code)
 		case INVOKE_STATIC:
-			log.Info("executing invokestatic")
+			log.Info("invokestatic")
 			err = invokeStatic(r, ctx, code)
 		case NEW:
-			log.Info("executing new")
+			log.Info("new")
 			err = new(r, ctx, code)
 		case DUP:
-			log.Info("executing dup")
+			log.Info("dup")
 			err = dup(r)
 		case INVOKE_SPECIAL:
-			log.Info("executing invokespecial")
+			log.Info("invokespecial")
 			err = invokeSpecial(r, ctx, code)
 		default:
 			err = errors.New(
@@ -149,9 +149,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
 }
 
-func (r *Runner) printStacktrace(ctx context.Context) {
-	log := logger.FromContext(ctx)
-
+func (r *Runner) getStacktrace() string {
 	stackTrace := "\n"
 	for i := len(r.stack.frames) - 1; i >= 0; i-- {
 		frame := r.stack.frames[i]
@@ -159,16 +157,13 @@ func (r *Runner) printStacktrace(ctx context.Context) {
 		stackTrace += fmt.Sprintf("\t%s.%s()\n", className, frame.methodName)
 	}
 
-	stackTrace = stackTrace[:len(stackTrace)-1]
-	log.Info(stackTrace)
+	return stackTrace[:len(stackTrace)-1]
 }
 
 func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
-	log.Infof("running method '%s'", name)
-	log.Debugf("with code % x", code)
-	log.Debugf("and %d parameters", len(parameters))
+	log.Infof("running '%s' %d % x", name, parameters, code)
 	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass

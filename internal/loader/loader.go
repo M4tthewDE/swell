@@ -29,7 +29,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 		return &c, nil
 	}
 
-	log.Infof("loading class %s", className)
+	log.Infof("loading %s", className)
 
 	r, err := getReader(className)
 	if err != nil {
