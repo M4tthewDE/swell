@@ -13,15 +13,19 @@ type ConstantPool struct {
 	Infos []CpInfo `json:"infos"`
 }
 
-func NewConstantPool(ctx context.Context, reader *bufio.Reader, count uint16) (*ConstantPool, error) {
+func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*ConstantPool, error) {
 	log := logger.FromContext(ctx)
 
 	infos := make([]CpInfo, count-1)
 
-	for i := range count - 1 {
+	for i := 0; i < count-1; i++ {
 		cpInfo, err := NewCpInfo(reader)
 		if err != nil {
 			return nil, err
+		}
+
+		if _, ok := cpInfo.(LongInfo); ok {
+			i += 1
 		}
 
 		log.Debugf("cp info %d: %s", i, cpInfo)

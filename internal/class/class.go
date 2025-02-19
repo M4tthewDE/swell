@@ -90,7 +90,7 @@ func NewClass(ctx context.Context, reader *bufio.Reader, name string) (*Class, e
 		return nil, err
 	}
 
-	constantPool, err := NewConstantPool(ctx, reader, constantPoolCount)
+	constantPool, err := NewConstantPool(ctx, reader, int(constantPoolCount))
 	if err != nil {
 		return nil, fmt.Errorf("constant pool in %s: %v", name, err)
 	}
