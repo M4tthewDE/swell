@@ -2,6 +2,7 @@ package jvm
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/m4tthewde/swell/internal/class"
@@ -9,6 +10,7 @@ import (
 
 type Value interface {
 	isValue()
+	String() string
 }
 
 func DefaultValue(typ class.FieldType) (Value, error) {
@@ -40,36 +42,72 @@ type BooleanValue struct {
 	value bool
 }
 
+func (v BooleanValue) String() string {
+	return fmt.Sprintf("Boolean=%t", v.value)
+}
+
 type ByteValue struct {
 	value uint8
+}
+
+func (v ByteValue) String() string {
+	return fmt.Sprintf("Byte=%d", v.value)
 }
 
 type ShortValue struct {
 	value uint16
 }
 
+func (v ShortValue) String() string {
+	return fmt.Sprintf("Short=%d", v.value)
+}
+
 type IntValue struct {
 	value uint32
+}
+
+func (v IntValue) String() string {
+	return fmt.Sprintf("Int=%d", v.value)
 }
 
 type LongValue struct {
 	value uint64
 }
 
+func (v LongValue) String() string {
+	return fmt.Sprintf("Long=%d", v.value)
+}
+
 type CharValue struct {
 	value rune
+}
+
+func (v CharValue) String() string {
+	return fmt.Sprintf("Char=%c", v.value)
 }
 
 type FloatValue struct {
 	value float32
 }
 
+func (v FloatValue) String() string {
+	return fmt.Sprintf("Float=%f", v.value)
+}
+
 type DoubleValue struct {
 	value float64
 }
 
+func (v DoubleValue) String() string {
+	return fmt.Sprintf("Double=%f", v.value)
+}
+
 type ReferenceValue struct {
 	value *uuid.UUID
+}
+
+func (v ReferenceValue) String() string {
+	return fmt.Sprintf("Reference=%s", v.value)
 }
 
 func (b BooleanValue) isValue()   {}

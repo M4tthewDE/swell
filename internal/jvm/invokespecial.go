@@ -3,6 +3,7 @@ package jvm
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
 )
@@ -13,7 +14,7 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	refInfo, err := r.currentClass.ConstantPool.Ref(index)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
@@ -38,7 +39,7 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	nameAndType, err := r.currentClass.ConstantPool.NameAndType(refInfo.NameAndTypeIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)

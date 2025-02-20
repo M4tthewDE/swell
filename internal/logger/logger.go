@@ -21,7 +21,7 @@ func NewLogger() (*zap.SugaredLogger, error) {
 	zapConfig.Level = getLogLevel()
 
 	zapConfig.EncoderConfig.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(fmt.Sprintf("%-20s", caller.TrimmedPath()))
+		enc.AppendString(fmt.Sprintf("%-25s", caller.TrimmedPath()))
 	}
 
 	logger, err := zapConfig.Build()

@@ -130,9 +130,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	r.currentClass = c
-
-	clinit, ok, err := r.currentClass.GetMethod("<clinit>")
+	clinit, ok, err := c.GetMethod("<clinit>")
 	if !ok {
 		return nil
 	}
@@ -146,13 +144,15 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
+	r.currentClass = c
+
 	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
 }
 
 func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
-	log.Infof("running '%s' %d % x", name, parameters, code)
+	log.Infof("running '%s' %s % x", name, parameters, code)
 	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass
