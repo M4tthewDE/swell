@@ -11,17 +11,19 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
-	ref, err := r.currentClass.ConstantPool.Ref(index)
+	pool := r.stack.CurrentConstantPool()
+
+	ref, err := pool.Ref(index)
 	if err != nil {
 		return err
 	}
 
-	c, err := r.currentClass.ConstantPool.Class(ref.ClassIndex)
+	classInfo, err := pool.Class(ref.ClassIndex)
 	if err != nil {
 		return err
 	}
 
-	className, err := r.currentClass.ConstantPool.GetUtf8(c.NameIndex)
+	className, err := pool.GetUtf8(classInfo.NameIndex)
 	if err != nil {
 		return err
 	}
@@ -30,17 +32,22 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	nameAndType, err := r.currentClass.ConstantPool.NameAndType(ref.NameAndTypeIndex)
+	nameAndType, err := pool.NameAndType(ref.NameAndTypeIndex)
 	if err != nil {
 		return err
 	}
 
-	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
+	methodName, err := pool.GetUtf8(nameAndType.NameIndex)
 	if err != nil {
 		return err
 	}
 
-	method, ok, err := r.currentClass.GetMethod(methodName)
+	c, err := r.loader.Load(ctx, className)
+	if err != nil {
+		return err
+	}
+
+	method, ok, err := c.GetMethod(methodName)
 	if err != nil {
 		return err
 	}
@@ -49,7 +56,7 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		return errors.New("method not found")
 	}
 
-	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
+	descriptor, err := pool.GetUtf8(nameAndType.DescriptorIndex)
 	if err != nil {
 		return err
 	}
@@ -67,9 +74,9 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.runMethod(ctx, code.Code, methodName, operands)
+		return r.runMethod(ctx, code.Code, *c, methodName, operands)
 	} else {
-		val, err := r.runNative(ctx, method, operands)
+		val, err := r.runNative(ctx, *c, method, operands)
 		if err != nil {
 			return err
 		}

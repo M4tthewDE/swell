@@ -123,12 +123,19 @@ func (b ReferenceValue) isValue() {}
 type Frame struct {
 	className      string
 	methodName     string
+	constantPool   class.ConstantPool
 	operands       []Value
 	localVariables []Value
 }
 
-func NewFrame(className string, methodName string, localVariables []Value) Frame {
-	return Frame{className: className, methodName: methodName, operands: make([]Value, 0), localVariables: localVariables}
+func NewFrame(
+	className string,
+	methodName string,
+	constantPool class.ConstantPool,
+	operands []Value,
+	localVariables []Value,
+) Frame {
+	return Frame{className: className, methodName: methodName, constantPool: constantPool, operands: make([]Value, 0), localVariables: localVariables}
 }
 
 type Stack struct {
@@ -138,10 +145,19 @@ type Stack struct {
 func NewStack() Stack {
 	return Stack{frames: make([]Frame, 0)}
 }
-
-func (s *Stack) Push(className string, methodName string, localVariables []Value) {
-	frame := NewFrame(className, methodName, localVariables)
+func (s *Stack) Push(
+	className string,
+	methodName string,
+	constantPool class.ConstantPool,
+	operands []Value,
+	localVariables []Value,
+) {
+	frame := NewFrame(className, methodName, constantPool, operands, localVariables)
 	s.frames = append(s.frames, frame)
+}
+
+func (s *Stack) Pop() {
+	s.frames = s.frames[:len(s.frames)-1]
 }
 
 func (s *Stack) PopOperands(count int) []Value {
@@ -167,4 +183,8 @@ func (s *Stack) GetOperand() Value {
 func (s *Stack) GetLocalVariable(n int) Value {
 	frame := s.frames[len(s.frames)-1]
 	return frame.localVariables[n]
+}
+
+func (s *Stack) CurrentConstantPool() class.ConstantPool {
+	return s.frames[len(s.frames)-1].constantPool
 }

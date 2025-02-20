@@ -12,7 +12,6 @@ import (
 )
 
 type Runner struct {
-	currentClass          *class.Class
 	classBeingInitialized string
 	pc                    int
 	returnPc              int
@@ -23,7 +22,6 @@ type Runner struct {
 
 func NewRunner() Runner {
 	return Runner{
-		currentClass:          nil,
 		classBeingInitialized: "",
 		pc:                    0,
 		returnPc:              0,
@@ -45,8 +43,6 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 		return err
 	}
 
-	r.currentClass = c
-
 	main, ok, err := c.GetMainMethod()
 	if !ok {
 		return errors.New("no main method found")
@@ -61,7 +57,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, "main", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, "main", make([]Value, 0))
 	if err != nil {
 		return err
 	}
@@ -149,9 +145,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	r.currentClass = c
-
-	err = r.runMethod(ctx, code.Code, "<clinit>", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, "<clinit>", make([]Value, 0))
 	if err != nil {
 		return err
 	}
@@ -160,30 +154,28 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return nil
 }
 
-func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
+func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, name string, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
-	log.Infof("running %s %s %s % x", r.currentClass.Name, name, parameters, code)
-	r.stack.Push(r.currentClass.Name, name, parameters)
+	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
+	r.stack.Push(c.Name, name, c.ConstantPool, make([]Value, 0), parameters)
 
-	oldClass := r.currentClass
 	r.returnPc = r.pc
 	r.pc = 0
 
 	err := r.run(ctx, code)
 	if err != nil {
-		r.currentClass = oldClass
-		err = fmt.Errorf("%v\n\t%s.%s()", err, strings.ReplaceAll(r.currentClass.Name, "/", "."), name)
+		err = fmt.Errorf("%v\n\t%s.%s()", err, strings.ReplaceAll(c.Name, "/", "."), name)
 		return err
 	}
 
-	r.currentClass = oldClass
+	r.stack.Pop()
 	r.pc = r.returnPc
 	return nil
 }
 
-func (r *Runner) runNative(ctx context.Context, method *class.Method, operands []Value) (Value, error) {
-	descriptor, err := r.currentClass.ConstantPool.GetUtf8(method.DescriptorIndex)
+func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Method, operands []Value) (Value, error) {
+	descriptor, err := c.ConstantPool.GetUtf8(method.DescriptorIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -193,17 +185,17 @@ func (r *Runner) runNative(ctx context.Context, method *class.Method, operands [
 		return nil, err
 	}
 
-	methodName, err := r.currentClass.ConstantPool.GetUtf8(method.NameIndex)
+	methodName, err := c.ConstantPool.GetUtf8(method.NameIndex)
 	if err != nil {
 		return nil, err
 	}
 
-	if r.currentClass.Name == "java/lang/System" &&
+	if c.Name == "java/lang/System" &&
 		methodName == "registerNatives" &&
 		methodDescriptor.ReturnDescriptor == 'V' &&
 		len(methodDescriptor.Parameters) == 0 {
 
-		method, ok, err := r.currentClass.GetMethod("initPhase1")
+		method, ok, err := c.GetMethod("initPhase1")
 		if err != nil {
 			return nil, err
 		}
@@ -217,7 +209,7 @@ func (r *Runner) runNative(ctx context.Context, method *class.Method, operands [
 			return nil, err
 		}
 
-		return nil, r.runMethod(ctx, code.Code, "initPhase1", make([]Value, 0))
+		return nil, r.runMethod(ctx, code.Code, c, "initPhase1", make([]Value, 0))
 	} else {
 		return nil, errors.New("native method not implemented")
 	}
