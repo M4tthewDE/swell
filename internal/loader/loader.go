@@ -47,6 +47,8 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 
 	l.classes[className] = *class
 
+	log.Infof("loaded %s", className)
+
 	return class, nil
 }
 

@@ -85,6 +85,7 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		var err error
 		switch instruction {
 		case ALOAD_0:
+			log.Info("aload_0")
 			err = aload(r, 0)
 		case GET_STATIC:
 			log.Info("getstatic")
@@ -119,11 +120,15 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 }
 
 func (r *Runner) initializeClass(ctx context.Context, className string) error {
+	log := logger.FromContext(ctx)
+
 	if r.classBeingInitialized == className {
 		return nil
 	} else {
 		r.classBeingInitialized = className
 	}
+
+	log.Infof("initializing %s", className)
 
 	c, err := r.loader.Load(ctx, className)
 	if err != nil {
@@ -146,13 +151,19 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 
 	r.currentClass = c
 
-	return r.runMethod(ctx, code.Code, "clinit", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, "<clinit>", make([]Value, 0))
+	if err != nil {
+		return err
+	}
+
+	log.Infof("initialized %s", className)
+	return nil
 }
 
 func (r *Runner) runMethod(ctx context.Context, code []byte, name string, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
-	log.Infof("running '%s' %s % x", name, parameters, code)
+	log.Infof("running %s %s %s % x", r.currentClass.Name, name, parameters, code)
 	r.stack.Push(r.currentClass.Name, name, parameters)
 
 	oldClass := r.currentClass

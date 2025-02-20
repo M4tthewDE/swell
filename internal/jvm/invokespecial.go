@@ -19,12 +19,12 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	classInfo, err := r.currentClass.ConstantPool.Class(refInfo.ClassIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	className, err := r.currentClass.ConstantPool.GetUtf8(classInfo.NameIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	err = r.initializeClass(ctx, className)
@@ -44,12 +44,12 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	methodName, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.NameIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	method, ok, err := r.currentClass.GetMethod(methodName)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	if !ok {
@@ -58,7 +58,7 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	descriptor, err := r.currentClass.ConstantPool.GetUtf8(nameAndType.DescriptorIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %v", r.currentClass.Name, err)
 	}
 
 	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
