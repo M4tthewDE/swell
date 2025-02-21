@@ -3,6 +3,7 @@ package class
 import (
 	"bufio"
 	"fmt"
+	"io"
 )
 
 type Attribute interface {
@@ -130,7 +131,7 @@ func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error)
 	}
 
 	code := make([]byte, codeLength)
-	_, err = reader.Read(code)
+	_, err = io.ReadFull(reader, code)
 	if err != nil {
 		return nil, fmt.Errorf("Code failed to read code: %v", err)
 	}

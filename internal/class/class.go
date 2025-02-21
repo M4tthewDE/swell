@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 )
 
 var MAGIC = []byte{0xCA, 0xFE, 0xBA, 0xBE}
@@ -70,7 +71,7 @@ func (c *Class) GetField(fieldName string) (*Field, bool, error) {
 
 func NewClass(ctx context.Context, reader *bufio.Reader, name string) (*Class, error) {
 	magic := make([]byte, 4)
-	_, err := reader.Read(magic)
+	_, err := io.ReadFull(reader, magic)
 	if err != nil {
 		return nil, err
 	}
