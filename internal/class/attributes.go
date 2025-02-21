@@ -2,6 +2,7 @@ package class
 
 import (
 	"bufio"
+	"fmt"
 )
 
 type Attribute interface {
@@ -19,7 +20,7 @@ func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attr
 	for i := range count {
 		attribute, err := NewAttribute(reader, cp)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse attribute %d/%d: %v", i, count, err)
 		}
 
 		attributes[i] = attribute
@@ -31,17 +32,17 @@ func NewAttributes(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Attr
 func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	nameIndex, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("nameIndex failed: %v", err)
 	}
 
 	length, err := readUint32(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("length failed for nameIndex=%d: %v", nameIndex, err)
 	}
 
 	name, err := cp.GetUtf8(nameIndex)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("name failed for nameIndex=%d: %v", nameIndex, err)
 	}
 
 	switch name {
@@ -57,7 +58,7 @@ func NewAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 		// skip unknown attributes
 		_, err = reader.Discard(int(length))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("skipping unknown attribute %s failed: %v", name, err)
 		}
 
 		return UnknownAttribute{}, nil
@@ -74,22 +75,22 @@ type Exception struct {
 func NewException(reader *bufio.Reader) (*Exception, error) {
 	startPc, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("startPc failed: %v", err)
 	}
 
 	endPc, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("endPc failed, startPc=%d: %v", startPc, err)
 	}
 
 	handlerPc, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("handlerPc failed, startPc=%d,endPc=%d: %v", startPc, endPc, err)
 	}
 
 	catchType, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("catchType failed, startPc=%d,endPc=%d,handlerPc=%d: %v", startPc, endPc, handlerPc, err)
 	}
 
 	return &Exception{
@@ -115,32 +116,35 @@ func (c CodeAttribute) Name() string {
 func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	maxStack, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Code failed to read maxStack: %v", err)
 	}
 
 	maxLocals, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Code failed to read maxLocals: %v", err)
 	}
 
 	codeLength, err := readUint32(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Code failed to read codeLength: %v", err)
 	}
 
 	code := make([]byte, codeLength)
 	_, err = reader.Read(code)
+	if err != nil {
+		return nil, fmt.Errorf("Code failed to read code: %v", err)
+	}
 
 	exceptionTableLength, err := readUint16(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Code failed to read exception table length: %v", err)
 	}
 
 	exceptions := make([]Exception, exceptionTableLength)
 	for i := range exceptionTableLength {
 		exception, err := NewException(reader)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Code failed to read exception %d/%d: %v", i, exceptionTableLength, err)
 		}
 
 		exceptions[i] = *exception

@@ -74,5 +74,5 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 	operands := r.stack.PopOperands(1)
 	operands = append(operands, r.stack.PopOperands(len(methodDescriptor.Parameters))...)
 
-	return r.runMethod(ctx, codeAttribute.Code, *c, methodName, operands)
+	return r.runMethod(ctx, codeAttribute.Code, *c, *method, operands)
 }

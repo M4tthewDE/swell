@@ -3,6 +3,7 @@ package class
 import (
 	"bufio"
 	"errors"
+	"fmt"
 )
 
 const MAIN_DESCRIPTOR = "([Ljava/lang/String;)V"
@@ -67,7 +68,7 @@ func NewMethods(reader *bufio.Reader, count uint16, cp *ConstantPool) ([]Method,
 	for i := range count {
 		method, err := NewMethod(reader, cp)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse method %d: %v", i, err)
 		}
 
 		methods[i] = *method
@@ -99,7 +100,7 @@ func NewMethod(reader *bufio.Reader, cp *ConstantPool) (*Method, error) {
 
 	attributes, err := NewAttributes(reader, attributesCount, cp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse attributes, nameIndex=%d: %v", nameIndex, err)
 	}
 
 	return &Method{

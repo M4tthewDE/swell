@@ -122,7 +122,7 @@ func (b ReferenceValue) isValue() {}
 
 type Frame struct {
 	className      string
-	methodName     string
+	method         class.Method
 	constantPool   class.ConstantPool
 	operands       []Value
 	localVariables []Value
@@ -130,12 +130,12 @@ type Frame struct {
 
 func NewFrame(
 	className string,
-	methodName string,
+	method class.Method,
 	constantPool class.ConstantPool,
 	operands []Value,
 	localVariables []Value,
 ) Frame {
-	return Frame{className: className, methodName: methodName, constantPool: constantPool, operands: make([]Value, 0), localVariables: localVariables}
+	return Frame{className: className, method: method, constantPool: constantPool, operands: make([]Value, 0), localVariables: localVariables}
 }
 
 type Stack struct {
@@ -147,12 +147,12 @@ func NewStack() Stack {
 }
 func (s *Stack) Push(
 	className string,
-	methodName string,
+	method class.Method,
 	constantPool class.ConstantPool,
 	operands []Value,
 	localVariables []Value,
 ) {
-	frame := NewFrame(className, methodName, constantPool, operands, localVariables)
+	frame := NewFrame(className, method, constantPool, operands, localVariables)
 	s.frames = append(s.frames, frame)
 }
 
@@ -187,4 +187,8 @@ func (s *Stack) GetLocalVariable(n int) Value {
 
 func (s *Stack) CurrentConstantPool() class.ConstantPool {
 	return s.frames[len(s.frames)-1].constantPool
+}
+
+func (s *Stack) CurrentMethod() class.Method {
+	return s.frames[len(s.frames)-1].method
 }

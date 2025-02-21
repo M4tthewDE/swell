@@ -13,8 +13,8 @@ import (
 
 type Runner struct {
 	classBeingInitialized string
+	initializedClasses    map[string]struct{}
 	pc                    int
-	returnPc              int
 	loader                loader.Loader
 	stack                 Stack
 	heap                  Heap
@@ -23,8 +23,8 @@ type Runner struct {
 func NewRunner() Runner {
 	return Runner{
 		classBeingInitialized: "",
+		initializedClasses:    make(map[string]struct{}),
 		pc:                    0,
-		returnPc:              0,
 		loader:                loader.NewLoader(),
 		stack:                 NewStack(),
 		heap:                  NewHeap(),
@@ -57,7 +57,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, "main", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, *main, make([]Value, 0))
 	if err != nil {
 		return err
 	}
@@ -66,6 +66,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 }
 
 const ALOAD_0 = 0x2a
+const RET = 0xb1
 const GET_STATIC = 0xb2
 const INVOKE_SPECIAL = 0xb7
 const INVOKE_STATIC = 0xb8
@@ -98,6 +99,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case INVOKE_SPECIAL:
 			log.Info("invokespecial")
 			err = invokeSpecial(r, ctx, code)
+		case RET:
+			log.Info("ret")
+			return ret(r)
 		default:
 			err = errors.New(
 				fmt.Sprintf("unknown instruction %x", instruction),
@@ -108,15 +112,20 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			return err
 		}
 
-		if r.pc >= len(code)-1 {
+		if r.pc == len(code) {
 			return nil
 		}
-
 	}
 }
 
 func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	log := logger.FromContext(ctx)
+
+	_, exists := r.initializedClasses[className]
+	if exists {
+		log.Infof("already initialized %s", className)
+		return nil
+	}
 
 	if r.classBeingInitialized == className {
 		return nil
@@ -133,6 +142,8 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 
 	clinit, ok, err := c.GetMethod("<clinit>")
 	if !ok {
+		r.initializedClasses[className] = struct{}{}
+		log.Infof("initialized %s", className)
 		return nil
 	}
 
@@ -145,32 +156,38 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, "<clinit>", make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, *clinit, make([]Value, 0))
 	if err != nil {
 		return err
 	}
 
+	r.initializedClasses[className] = struct{}{}
 	log.Infof("initialized %s", className)
 	return nil
 }
 
-func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, name string, parameters []Value) error {
+func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, method class.Method, parameters []Value) error {
 	log := logger.FromContext(ctx)
 
-	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
-	r.stack.Push(c.Name, name, c.ConstantPool, make([]Value, 0), parameters)
+	name, err := c.ConstantPool.GetUtf8(method.NameIndex)
+	if err != nil {
+		return err
+	}
 
-	r.returnPc = r.pc
+	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
+	r.stack.Push(c.Name, method, c.ConstantPool, make([]Value, 0), parameters)
+
+	returnPc := r.pc
 	r.pc = 0
 
-	err := r.run(ctx, code)
+	err = r.run(ctx, code)
 	if err != nil {
 		err = fmt.Errorf("%v\n\t%s.%s()", err, strings.ReplaceAll(c.Name, "/", "."), name)
 		return err
 	}
 
 	r.stack.Pop()
-	r.pc = r.returnPc
+	r.pc = returnPc
 	return nil
 }
 
@@ -209,7 +226,7 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 			return nil, err
 		}
 
-		return nil, r.runMethod(ctx, code.Code, c, "initPhase1", make([]Value, 0))
+		return nil, r.runMethod(ctx, code.Code, c, *method, make([]Value, 0))
 	} else {
 		return nil, errors.New("native method not implemented")
 	}
