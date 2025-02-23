@@ -180,7 +180,7 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, meth
 	}
 
 	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
-	r.stack.Push(c.Name, method, c.ConstantPool, make([]stack.Value, 0), parameters)
+	r.stack.Push(c.Name, method, c.ConstantPool, parameters)
 
 	returnPc := r.pc
 	r.pc = 0
@@ -235,7 +235,7 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 			return nil, err
 		}
 
-		return nil, r.runMethod(ctx, code.Code, c, *method, make([]stack.Value, 0))
+		return nil, r.runMethod(ctx, code.Code, c, *method, operands)
 	} else {
 		return nil, errors.New("native method not implemented")
 	}

@@ -9,8 +9,8 @@ import (
 
 func TestStackPushPop(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
-	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{})
 
 	assert.Equal(t, 2, len(stack.frames))
 
@@ -22,7 +22,7 @@ func TestStackPushPop(t *testing.T) {
 
 func TestStackPushOperand(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
 
 	value := BooleanValue{Value: false}
 	err := stack.PushOperand(BooleanValue{Value: false})
@@ -35,7 +35,7 @@ func TestStackPushOperand(t *testing.T) {
 
 func TestStackPopOperand(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
 
 	value, err := DefaultValue(class.BOOLEAN)
 	assert.NotNil(t, err)

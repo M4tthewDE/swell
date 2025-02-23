@@ -36,10 +36,9 @@ func (s *Stack) Push(
 	className string,
 	method class.Method,
 	constantPool class.ConstantPool,
-	operands []Value,
 	localVariables []Value,
 ) {
-	frame := NewFrame(className, method, constantPool, operands, localVariables)
+	frame := NewFrame(className, method, constantPool, []Value{}, localVariables)
 	s.frames = append(s.frames, frame)
 }
 
