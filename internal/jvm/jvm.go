@@ -70,6 +70,7 @@ const LdcOp = 0x12
 const Aload0Op = 0x2a
 const RetOp = 0xb1
 const GetStaticOp = 0xb2
+const InvokeVirtual = 0xb6
 const InvokeSpecialOp = 0xb7
 const InvokeStaticOp = 0xb8
 const NewOp = 0xbb
@@ -83,6 +84,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 
 		var err error
 		switch instruction {
+		case InvokeVirtual:
+			log.Info("invokevirtual")
+			err = invokevirtual(r, ctx, code)
 		case LdcOp:
 			log.Info("ldc")
 			err = ldc(r, ctx, code)

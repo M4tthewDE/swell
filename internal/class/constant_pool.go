@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/m4tthewde/swell/internal/logger"
 )
@@ -79,6 +80,7 @@ func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
 
 const Utf8Tag = 1
 const IntegerTag = 3
+const FloatTag = 4
 const LongTag = 5
 const ClassTag = 7
 const StringTag = 8
@@ -111,6 +113,8 @@ func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
 		return NewUtf8Info(reader)
 	case IntegerTag:
 		return NewIntegerInfo(reader)
+	case FloatTag:
+		return NewFloatInfo(reader)
 	case LongTag:
 		return NewLongInfo(reader)
 	case ClassTag:
@@ -297,6 +301,23 @@ func NewIntegerInfo(reader *bufio.Reader) (CpInfo, error) {
 	}
 
 	return IntegerInfo{Value: value}, nil
+}
+
+type FloatInfo struct {
+	Value float32 `json:"value"`
+}
+
+func (c FloatInfo) String() string {
+	return fmt.Sprintf("FloatInfo[%f]", c.Value)
+}
+
+func NewFloatInfo(reader *bufio.Reader) (CpInfo, error) {
+	value, err := readUint32(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return FloatInfo{Value: math.Float32frombits(value)}, nil
 }
 
 type MethodHandleInfo struct {

@@ -10,6 +10,7 @@ const MainDescriptor = "([Ljava/lang/String;)V"
 
 const AccPublic = 0x0001
 const AccStatic = 0x0008
+const AccVarargs = 0x0080
 const AccNative = 0x0100
 
 type Method struct {
@@ -51,6 +52,10 @@ func (m Method) isStatic() bool {
 
 func (m Method) IsNative() bool {
 	return (m.AccessFlags & AccNative) != 0
+}
+
+func (m Method) IsVarargs() bool {
+	return (m.AccessFlags & AccVarargs) != 0
 }
 
 func (m Method) CodeAttribute() (*CodeAttribute, error) {
