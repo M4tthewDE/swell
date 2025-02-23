@@ -77,18 +77,18 @@ func (cp *ConstantPool) NameAndType(n uint16) (*NameAndTypeInfo, error) {
 	return nil, fmt.Errorf("no NameAndType info found at %d", n)
 }
 
-const UTF8_TAG = 1
-const INTEGER_TAG = 3
-const LONG_TAG = 5
-const CLASS_TAG = 7
-const STRING_TAG = 8
-const FIELDREF_TAG = 9
-const METHODREF_TAG = 10
-const INTERFACE_METHODREF_TAG = 11
-const NAME_AND_TYPE_TAG = 12
-const METHOD_HANDLE_TAG = 15
-const METHOD_TYPE_TAG = 16
-const INVOKE_DYNAMIC_TAG = 18
+const Utf8Tag = 1
+const IntegerTag = 3
+const LongTag = 5
+const ClassTag = 7
+const StringTag = 8
+const FieldrefTag = 9
+const MethodrefTag = 10
+const InterfaceMethodrefTag = 11
+const NameAndTypeTag = 12
+const MethodHandleTag = 15
+const MethodTypeTag = 16
+const InvokeDynamicTag = 18
 
 type CpInfo interface {
 	String() string
@@ -97,7 +97,7 @@ type CpInfo interface {
 type ReservedInfo struct{}
 
 func (c ReservedInfo) String() string {
-	return fmt.Sprintf("ReservedInfo")
+	return "ReservedInfo"
 }
 
 func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
@@ -107,29 +107,29 @@ func NewCpInfo(reader *bufio.Reader) (CpInfo, error) {
 	}
 
 	switch tag {
-	case UTF8_TAG:
+	case Utf8Tag:
 		return NewUtf8Info(reader)
-	case INTEGER_TAG:
+	case IntegerTag:
 		return NewIntegerInfo(reader)
-	case LONG_TAG:
+	case LongTag:
 		return NewLongInfo(reader)
-	case CLASS_TAG:
+	case ClassTag:
 		return NewClassInfo(reader)
-	case STRING_TAG:
+	case StringTag:
 		return NewStringInfo(reader)
-	case FIELDREF_TAG:
+	case FieldrefTag:
 		return NewRefInfo(reader)
-	case METHODREF_TAG:
+	case MethodrefTag:
 		return NewRefInfo(reader)
-	case INTERFACE_METHODREF_TAG:
+	case InterfaceMethodrefTag:
 		return NewRefInfo(reader)
-	case NAME_AND_TYPE_TAG:
+	case NameAndTypeTag:
 		return NewNameAndTypeInfo(reader)
-	case METHOD_HANDLE_TAG:
+	case MethodHandleTag:
 		return NewMethodHandleInfo(reader)
-	case METHOD_TYPE_TAG:
+	case MethodTypeTag:
 		return NewMethodTypeInfo(reader)
-	case INVOKE_DYNAMIC_TAG:
+	case InvokeDynamicTag:
 		return NewInvokeDynamicInfo(reader)
 	default:
 		return nil, fmt.Errorf("unknown tag: %d", tag)

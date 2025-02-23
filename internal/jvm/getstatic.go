@@ -59,5 +59,5 @@ func getStatic(r *Runner, ctx context.Context, code []byte) error {
 		return errors.New("static field not found")
 	}
 
-	return errors.New(fmt.Sprintf("not implemented: getstatic %s", fieldName))
+	return fmt.Errorf("not implemented: getstatic %s", fieldName)
 }

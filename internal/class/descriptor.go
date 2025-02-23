@@ -36,7 +36,7 @@ func NewBaseType(r rune) (BaseType, error) {
 	case 'Z':
 		return BaseType(BOOLEAN), nil
 	default:
-		return 0, errors.New(fmt.Sprintf("invalid base type: %s", string(r)))
+		return 0, fmt.Errorf("invalid base type: %s", string(r))
 	}
 }
 
@@ -44,7 +44,7 @@ type ObjectType string
 
 func NewObjectType(objectType string) (ObjectType, error) {
 	if objectType[0] != 'L' {
-		return "", errors.New(fmt.Sprintf("invalid object type: %s", string(objectType)))
+		return "", fmt.Errorf("invalid object type: %s", string(objectType))
 	}
 
 	index := strings.Index(objectType, ";")
@@ -59,7 +59,7 @@ type ArrayType FieldType
 
 func NewArrayType(arrayType string) (ArrayType, error) {
 	if arrayType[0] != '[' {
-		return "", errors.New(fmt.Sprintf("invalid array type: %s", string(arrayType)))
+		return "", fmt.Errorf("invalid array type: %s", string(arrayType))
 	}
 
 	fieldType, err := NewFieldType(arrayType[1:])

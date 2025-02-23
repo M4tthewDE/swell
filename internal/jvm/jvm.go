@@ -66,14 +66,14 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 	return nil
 }
 
-const LDC = 0x12
-const ALOAD_0 = 0x2a
-const RET = 0xb1
-const GET_STATIC = 0xb2
-const INVOKE_SPECIAL = 0xb7
-const INVOKE_STATIC = 0xb8
-const NEW = 0xbb
-const DUP = 0x59
+const LdcOp = 0x12
+const Aload0Op = 0x2a
+const RetOp = 0xb1
+const GetStaticOp = 0xb2
+const InvokeSpecialOp = 0xb7
+const InvokeStaticOp = 0xb8
+const NewOp = 0xbb
+const DupOp = 0x59
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -83,34 +83,33 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 
 		var err error
 		switch instruction {
-		case LDC:
+		case LdcOp:
 			log.Info("ldc")
 			err = ldc(r, ctx, code)
-		case ALOAD_0:
+		case Aload0Op:
 			log.Info("aload_0")
 			err = aload(r, 0)
-		case GET_STATIC:
+		case GetStaticOp:
 			log.Info("getstatic")
 			err = getStatic(r, ctx, code)
-		case INVOKE_STATIC:
+		case InvokeStaticOp:
 			log.Info("invokestatic")
 			err = invokeStatic(r, ctx, code)
-		case NEW:
+		case NewOp:
 			log.Info("new")
 			err = new(r, ctx, code)
-		case DUP:
+		case DupOp:
 			log.Info("dup")
 			err = dup(r)
-		case INVOKE_SPECIAL:
+		case InvokeSpecialOp:
 			log.Info("invokespecial")
 			err = invokeSpecial(r, ctx, code)
-		case RET:
+		case RetOp:
 			log.Info("ret")
 			return ret(r)
 		default:
-			err = errors.New(
-				fmt.Sprintf("unknown instruction %x", instruction),
-			)
+			return fmt.Errorf("unknown instruction %x", instruction)
+
 		}
 
 		if err != nil {

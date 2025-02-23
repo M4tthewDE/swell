@@ -117,35 +117,35 @@ func (c CodeAttribute) Name() string {
 func NewCodeAttribute(reader *bufio.Reader, cp *ConstantPool) (Attribute, error) {
 	maxStack, err := readUint16(reader)
 	if err != nil {
-		return nil, fmt.Errorf("Code failed to read maxStack: %v", err)
+		return nil, fmt.Errorf("attribute Code failed to read maxStack: %v", err)
 	}
 
 	maxLocals, err := readUint16(reader)
 	if err != nil {
-		return nil, fmt.Errorf("Code failed to read maxLocals: %v", err)
+		return nil, fmt.Errorf("attribute Code failed to read maxLocals: %v", err)
 	}
 
 	codeLength, err := readUint32(reader)
 	if err != nil {
-		return nil, fmt.Errorf("Code failed to read codeLength: %v", err)
+		return nil, fmt.Errorf("attribute Code failed to read codeLength: %v", err)
 	}
 
 	code := make([]byte, codeLength)
 	_, err = io.ReadFull(reader, code)
 	if err != nil {
-		return nil, fmt.Errorf("Code failed to read code: %v", err)
+		return nil, fmt.Errorf("attribute Code failed to read code: %v", err)
 	}
 
 	exceptionTableLength, err := readUint16(reader)
 	if err != nil {
-		return nil, fmt.Errorf("Code failed to read exception table length: %v", err)
+		return nil, fmt.Errorf("attribute Code failed to read exception table length: %v", err)
 	}
 
 	exceptions := make([]Exception, exceptionTableLength)
 	for i := range exceptionTableLength {
 		exception, err := NewException(reader)
 		if err != nil {
-			return nil, fmt.Errorf("Code failed to read exception %d/%d: %v", i, exceptionTableLength, err)
+			return nil, fmt.Errorf("attribute Code failed to read exception %d/%d: %v", i, exceptionTableLength, err)
 		}
 
 		exceptions[i] = *exception

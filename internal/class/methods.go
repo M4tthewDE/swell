@@ -6,11 +6,11 @@ import (
 	"fmt"
 )
 
-const MAIN_DESCRIPTOR = "([Ljava/lang/String;)V"
+const MainDescriptor = "([Ljava/lang/String;)V"
 
-const ACC_PUBLIC = 0x0001
-const ACC_STATIC = 0x0008
-const ACC_NATIVE = 0x0100
+const AccPublic = 0x0001
+const AccStatic = 0x0008
+const AccNative = 0x0100
 
 type Method struct {
 	AccessFlags     uint16      `json:"access_flags"`
@@ -38,19 +38,19 @@ func (m Method) IsMain(cp *ConstantPool) (bool, error) {
 		return false, err
 	}
 
-	return descriptor == MAIN_DESCRIPTOR, nil
+	return descriptor == MainDescriptor, nil
 }
 
 func (m Method) isPublic() bool {
-	return (m.AccessFlags & ACC_PUBLIC) != 0
+	return (m.AccessFlags & AccPublic) != 0
 }
 
 func (m Method) isStatic() bool {
-	return (m.AccessFlags & ACC_STATIC) != 0
+	return (m.AccessFlags & AccStatic) != 0
 }
 
 func (m Method) IsNative() bool {
-	return (m.AccessFlags & ACC_NATIVE) != 0
+	return (m.AccessFlags & AccNative) != 0
 }
 
 func (m Method) CodeAttribute() (*CodeAttribute, error) {

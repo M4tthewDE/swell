@@ -120,13 +120,13 @@ func (v ClassReferenceValue) String() string {
 	return fmt.Sprintf("ClassReference=%s", v.Value.Name)
 }
 
-func (b BooleanValue) isValue()        {}
-func (b ByteValue) isValue()           {}
-func (b ShortValue) isValue()          {}
-func (b IntValue) isValue()            {}
-func (b LongValue) isValue()           {}
-func (b CharValue) isValue()           {}
-func (b FloatValue) isValue()          {}
-func (b DoubleValue) isValue()         {}
-func (b ReferenceValue) isValue()      {}
-func (b ClassReferenceValue) isValue() {}
+func (v BooleanValue) isValue()        {}
+func (v ByteValue) isValue()           {}
+func (v ShortValue) isValue()          {}
+func (v IntValue) isValue()            {}
+func (v LongValue) isValue()           {}
+func (v CharValue) isValue()           {}
+func (v FloatValue) isValue()          {}
+func (v DoubleValue) isValue()         {}
+func (v ReferenceValue) isValue()      {}
+func (v ClassReferenceValue) isValue() {}
