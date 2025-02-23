@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 	"github.com/m4tthewde/swell/internal/loader"
 	"github.com/m4tthewde/swell/internal/logger"
 )
@@ -16,7 +17,7 @@ type Runner struct {
 	initializedClasses    map[string]struct{}
 	pc                    int
 	loader                loader.Loader
-	stack                 Stack
+	stack                 stack.Stack
 	heap                  Heap
 }
 
@@ -26,7 +27,7 @@ func NewRunner() Runner {
 		initializedClasses:    make(map[string]struct{}),
 		pc:                    0,
 		loader:                loader.NewLoader(),
-		stack:                 NewStack(),
+		stack:                 stack.NewStack(),
 		heap:                  NewHeap(),
 	}
 
@@ -57,7 +58,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, *main, make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, *main, make([]stack.Value, 0))
 	if err != nil {
 		return err
 	}
@@ -160,7 +161,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, *clinit, make([]Value, 0))
+	err = r.runMethod(ctx, code.Code, *c, *clinit, make([]stack.Value, 0))
 	if err != nil {
 		return err
 	}
@@ -170,7 +171,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return nil
 }
 
-func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, method class.Method, parameters []Value) error {
+func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, method class.Method, parameters []stack.Value) error {
 	log := logger.FromContext(ctx)
 
 	name, err := c.ConstantPool.GetUtf8(method.NameIndex)
@@ -179,7 +180,7 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, meth
 	}
 
 	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
-	r.stack.Push(c.Name, method, c.ConstantPool, make([]Value, 0), parameters)
+	r.stack.Push(c.Name, method, c.ConstantPool, make([]stack.Value, 0), parameters)
 
 	returnPc := r.pc
 	r.pc = 0
@@ -199,7 +200,7 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, meth
 	return nil
 }
 
-func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Method, operands []Value) (Value, error) {
+func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Method, operands []stack.Value) (stack.Value, error) {
 	descriptor, err := c.ConstantPool.GetUtf8(method.DescriptorIndex)
 	if err != nil {
 		return nil, err
@@ -234,7 +235,7 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 			return nil, err
 		}
 
-		return nil, r.runMethod(ctx, code.Code, c, *method, make([]Value, 0))
+		return nil, r.runMethod(ctx, code.Code, c, *method, make([]stack.Value, 0))
 	} else {
 		return nil, errors.New("native method not implemented")
 	}

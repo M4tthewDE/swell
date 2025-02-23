@@ -3,14 +3,15 @@ package jvm
 import (
 	"github.com/google/uuid"
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
 type Object struct {
 	className string
-	fields    map[string]Value
+	fields    map[string]stack.Value
 }
 
-func NewObject(name string, fields map[string]Value) Object {
+func NewObject(name string, fields map[string]stack.Value) Object {
 	return Object{className: name, fields: fields}
 }
 
@@ -23,7 +24,7 @@ func NewHeap() Heap {
 }
 
 func (h *Heap) Allocate(c *class.Class) (*uuid.UUID, error) {
-	fields := make(map[string]Value)
+	fields := make(map[string]stack.Value)
 
 	for _, field := range c.Fields {
 		name, err := c.ConstantPool.GetUtf8(field.NameIndex)
@@ -41,7 +42,7 @@ func (h *Heap) Allocate(c *class.Class) (*uuid.UUID, error) {
 			return nil, err
 		}
 
-		value, err := DefaultValue(fieldType)
+		value, err := stack.DefaultValue(fieldType)
 		if err != nil {
 			return nil, err
 		}

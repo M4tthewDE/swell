@@ -1,6 +1,10 @@
 package jvm
 
-import "context"
+import (
+	"context"
+
+	"github.com/m4tthewde/swell/internal/jvm/stack"
+)
 
 func new(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
@@ -36,5 +40,5 @@ func new(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	return r.stack.PushOperand(ReferenceValue{value: id})
+	return r.stack.PushOperand(stack.ReferenceValue{Value: id})
 }

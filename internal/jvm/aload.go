@@ -1,6 +1,10 @@
 package jvm
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/m4tthewde/swell/internal/jvm/stack"
+)
 
 func aload(r *Runner, n int) error {
 	r.pc += 1
@@ -9,7 +13,7 @@ func aload(r *Runner, n int) error {
 		return err
 	}
 
-	if reference, ok := variable.(ReferenceValue); ok {
+	if reference, ok := variable.(stack.ReferenceValue); ok {
 		return r.stack.PushOperand(reference)
 	}
 

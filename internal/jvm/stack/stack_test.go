@@ -1,4 +1,4 @@
-package jvm
+package stack
 
 import (
 	"testing"
@@ -24,8 +24,8 @@ func TestStackPushOperand(t *testing.T) {
 	stack := NewStack()
 	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
 
-	value := BooleanValue{value: false}
-	err := stack.PushOperand(BooleanValue{value: false})
+	value := BooleanValue{Value: false}
+	err := stack.PushOperand(BooleanValue{Value: false})
 	assert.Nil(t, err)
 
 	operands, err := stack.PopOperands(1)

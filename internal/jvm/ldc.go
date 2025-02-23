@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
 func ldc(r *Runner, ctx context.Context, code []byte) error {
@@ -37,7 +38,7 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.stack.PushOperand(ClassReferenceValue{value: c})
+		return r.stack.PushOperand(stack.ClassReferenceValue{Value: c})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", *cpInfo)
 	}
