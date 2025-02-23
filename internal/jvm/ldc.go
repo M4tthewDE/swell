@@ -11,7 +11,10 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 	index := code[r.pc+1]
 	r.pc += 2
 
-	pool := r.stack.CurrentConstantPool()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
 
 	cpInfo, err := pool.Get(int(index))
 	if err != nil {
@@ -34,9 +37,7 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		r.stack.PushOperand(ClassReferenceValue{value: c})
-
-		return nil
+		return r.stack.PushOperand(ClassReferenceValue{value: c})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", *cpInfo)
 	}

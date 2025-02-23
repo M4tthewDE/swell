@@ -9,38 +9,42 @@ import (
 
 func TestStackPushPop(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", "main", class.ConstantPool{}, []Value{}, []Value{})
-	stack.Push("Main2", "main2", class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
 
 	assert.Equal(t, 2, len(stack.frames))
 
-	stack.Pop()
+	err := stack.Pop()
+	assert.Nil(t, err)
 
 	assert.Equal(t, 1, len(stack.frames))
 }
 
 func TestStackPushOperand(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", "main", class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
 
-	value, err := DefaultValue(class.BOOLEAN)
-	assert.NotNil(t, err)
+	value := BooleanValue{value: false}
+	err := stack.PushOperand(BooleanValue{value: false})
+	assert.Nil(t, err)
 
-	stack.PushOperand(value)
-
-	operands := stack.PopOperands(1)
+	operands, err := stack.PopOperands(1)
+	assert.Nil(t, err)
 	assert.Equal(t, value, operands[0])
 }
 
 func TestStackPopOperand(t *testing.T) {
 	stack := NewStack()
-	stack.Push("Main", "main", class.ConstantPool{}, []Value{}, []Value{})
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{}, []Value{})
 
 	value, err := DefaultValue(class.BOOLEAN)
 	assert.NotNil(t, err)
-	stack.PushOperand(value)
 
-	operands := stack.PopOperands(1)
+	err = stack.PushOperand(value)
+	assert.Nil(t, err)
+
+	operands, err := stack.PopOperands(1)
+	assert.Nil(t, err)
 	assert.Equal(t, value, operands[0])
 
 	assert.Panics(t, func() { stack.PopOperands(1) })

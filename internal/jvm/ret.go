@@ -7,8 +7,15 @@ import (
 )
 
 func ret(r *Runner) error {
-	pool := r.stack.CurrentConstantPool()
-	method := r.stack.CurrentMethod()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
+
+	method, err := r.stack.CurrentMethod()
+	if err != nil {
+		return err
+	}
 
 	descriptor, err := pool.GetUtf8(method.DescriptorIndex)
 	if err != nil {

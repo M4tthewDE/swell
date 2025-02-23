@@ -10,7 +10,10 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
-	pool := r.stack.CurrentConstantPool()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
 
 	refInfo, err := pool.Ref(index)
 	if err != nil {
@@ -71,8 +74,17 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	operands := r.stack.PopOperands(1)
-	operands = append(operands, r.stack.PopOperands(len(methodDescriptor.Parameters))...)
+	operands, err := r.stack.PopOperands(1)
+	if err != nil {
+		return err
+	}
+
+	params, err := r.stack.PopOperands(len(methodDescriptor.Parameters))
+	if err != nil {
+		return err
+	}
+
+	operands = append(operands, params...)
 
 	return r.runMethod(ctx, codeAttribute.Code, *c, *method, operands)
 }

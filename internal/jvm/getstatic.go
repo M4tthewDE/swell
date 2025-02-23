@@ -10,7 +10,10 @@ func getStatic(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
-	pool := r.stack.CurrentConstantPool()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
 
 	refInfo, err := pool.Ref(index)
 	if err != nil {

@@ -11,7 +11,10 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
-	pool := r.stack.CurrentConstantPool()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
 
 	ref, err := pool.Ref(index)
 	if err != nil {
@@ -66,7 +69,10 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	operands := r.stack.PopOperands(len(methodDescriptor.Parameters))
+	operands, err := r.stack.PopOperands(len(methodDescriptor.Parameters))
+	if err != nil {
+		return err
+	}
 
 	if !method.IsNative() {
 		code, err := method.CodeAttribute()
@@ -82,9 +88,9 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		}
 
 		if val != nil {
-			r.stack.PushOperand(val)
+			return r.stack.PushOperand(val)
 		}
-	}
 
-	return nil
+		return nil
+	}
 }

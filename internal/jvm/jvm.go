@@ -190,7 +190,11 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, meth
 		return err
 	}
 
-	r.stack.Pop()
+	err = r.stack.Pop()
+	if err != nil {
+		return err
+	}
+
 	r.pc = returnPc
 	return nil
 }

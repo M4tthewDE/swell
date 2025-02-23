@@ -6,7 +6,10 @@ func new(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
-	pool := r.stack.CurrentConstantPool()
+	pool, err := r.stack.CurrentConstantPool()
+	if err != nil {
+		return err
+	}
 
 	class, err := pool.Class(index)
 	if err != nil {
@@ -33,7 +36,5 @@ func new(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	r.stack.PushOperand(ReferenceValue{value: id})
-
-	return nil
+	return r.stack.PushOperand(ReferenceValue{value: id})
 }

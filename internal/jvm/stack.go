@@ -167,39 +167,84 @@ func (s *Stack) Push(
 	s.frames = append(s.frames, frame)
 }
 
-func (s *Stack) Pop() {
+func (s *Stack) Pop() error {
+	if len(s.frames) == 0 {
+		return errors.New("stack is empty")
+	}
+
 	s.frames = s.frames[:len(s.frames)-1]
+	return nil
 }
 
-func (s *Stack) PopOperands(count int) []Value {
+func (s *Stack) activeFrame() (*Frame, error) {
+	if len(s.frames) == 0 {
+		return nil, errors.New("stack is empty")
+	}
+
 	frame := s.frames[len(s.frames)-1]
+	return &frame, nil
+}
+
+func (s *Stack) PopOperands(count int) ([]Value, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+
 	operands := frame.operands[len(frame.operands)-count:]
 
 	frame.operands = frame.operands[:len(frame.operands)-count]
-	s.frames[len(s.frames)-1] = frame
-	return operands
+	s.frames[len(s.frames)-1] = *frame
+	return operands, nil
 }
 
-func (s *Stack) PushOperand(operand Value) {
-	frame := s.frames[len(s.frames)-1]
+func (s *Stack) PushOperand(operand Value) error {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return err
+	}
+
 	frame.operands = append(frame.operands, operand)
-	s.frames[len(s.frames)-1] = frame
+	s.frames[len(s.frames)-1] = *frame
+
+	return nil
 }
 
-func (s *Stack) GetOperand() Value {
-	frame := s.frames[len(s.frames)-1]
-	return frame.operands[len(frame.operands)-1]
+func (s *Stack) GetOperand() (Value, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+	return frame.operands[len(frame.operands)-1], nil
 }
 
-func (s *Stack) GetLocalVariable(n int) Value {
-	frame := s.frames[len(s.frames)-1]
-	return frame.localVariables[n]
+func (s *Stack) GetLocalVariable(n int) (Value, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+
+	if n >= len(frame.localVariables) {
+		return nil, fmt.Errorf("no localvariable at %d, len is %d", n, len(frame.localVariables))
+	}
+
+	return frame.localVariables[n], nil
 }
 
-func (s *Stack) CurrentConstantPool() class.ConstantPool {
-	return s.frames[len(s.frames)-1].constantPool
+func (s *Stack) CurrentConstantPool() (*class.ConstantPool, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+
+	return &frame.constantPool, nil
 }
 
-func (s *Stack) CurrentMethod() class.Method {
-	return s.frames[len(s.frames)-1].method
+func (s *Stack) CurrentMethod() (*class.Method, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+
+	return &frame.method, nil
 }
