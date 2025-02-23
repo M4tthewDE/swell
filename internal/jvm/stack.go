@@ -33,6 +33,8 @@ func DefaultValue(typ class.FieldType) (Value, error) {
 		return DoubleValue{value: 0}, nil
 	case ReferenceValue:
 		return ReferenceValue{value: nil}, nil
+	case ClassReferenceValue:
+		return ClassReferenceValue{value: nil}, nil
 	default:
 		return nil, errors.New("unknown field type")
 	}
@@ -110,15 +112,24 @@ func (v ReferenceValue) String() string {
 	return fmt.Sprintf("Reference=%s", v.value)
 }
 
-func (b BooleanValue) isValue()   {}
-func (b ByteValue) isValue()      {}
-func (b ShortValue) isValue()     {}
-func (b IntValue) isValue()       {}
-func (b LongValue) isValue()      {}
-func (b CharValue) isValue()      {}
-func (b FloatValue) isValue()     {}
-func (b DoubleValue) isValue()    {}
-func (b ReferenceValue) isValue() {}
+type ClassReferenceValue struct {
+	value *class.Class
+}
+
+func (v ClassReferenceValue) String() string {
+	return fmt.Sprintf("ClassReference=%s", v.value.Name)
+}
+
+func (b BooleanValue) isValue()        {}
+func (b ByteValue) isValue()           {}
+func (b ShortValue) isValue()          {}
+func (b IntValue) isValue()            {}
+func (b LongValue) isValue()           {}
+func (b CharValue) isValue()           {}
+func (b FloatValue) isValue()          {}
+func (b DoubleValue) isValue()         {}
+func (b ReferenceValue) isValue()      {}
+func (b ClassReferenceValue) isValue() {}
 
 type Frame struct {
 	className      string

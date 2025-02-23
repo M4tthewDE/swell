@@ -65,6 +65,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 	return nil
 }
 
+const LDC = 0x12
 const ALOAD_0 = 0x2a
 const RET = 0xb1
 const GET_STATIC = 0xb2
@@ -81,6 +82,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 
 		var err error
 		switch instruction {
+		case LDC:
+			log.Info("ldc")
+			err = ldc(r, ctx, code)
 		case ALOAD_0:
 			log.Info("aload_0")
 			err = aload(r, 0)
