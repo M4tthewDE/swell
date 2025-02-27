@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
 func ldc(r *Runner, ctx context.Context, code []byte) error {
@@ -33,14 +34,12 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		_, err = r.loader.Load(ctx, className)
+		c, err := r.loader.Load(ctx, className)
 		if err != nil {
 			return err
 		}
 
-		return fmt.Errorf("todo: store Class<%s> on operand stack", className)
-
-		//return r.stack.PushOperand(stack.ClassReferenceValue{Value: c})
+		return r.stack.PushOperand(stack.ClassReferenceValue{Value: c})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", *cpInfo)
 	}

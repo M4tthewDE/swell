@@ -17,5 +17,9 @@ func aload(r *Runner, n int) error {
 		return r.stack.PushOperand(reference)
 	}
 
+	if reference, ok := variable.(stack.ClassReferenceValue); ok {
+		return r.stack.PushOperand(reference)
+	}
+
 	return errors.New("invalid variable type")
 }

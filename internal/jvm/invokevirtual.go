@@ -6,12 +6,9 @@ import (
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
-	"github.com/m4tthewde/swell/internal/logger"
 )
 
 func invokevirtual(r *Runner, ctx context.Context, code []byte) error {
-	log := logger.FromContext(ctx)
-
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -69,20 +66,22 @@ func invokevirtual(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	log.Infof("%s %s %s", c.Name, methodName, descriptorString)
-
 	if isSignaturePolymorphic(c, method, methodDescriptor) {
 		return errors.New("invokevirtual not implemented for signature polymorphic methods")
 	} else {
 
-		objectref, err := r.stack.PopOperands(1)
+		// +1 to include the objectref at position 0
+		parameters, err := r.stack.PopOperands(len(methodDescriptor.Parameters) + 1)
 		if err != nil {
 			return err
 		}
 
-		log.Info(objectref)
+		codeAttribute, err := method.CodeAttribute()
+		if err != nil {
+			return err
+		}
 
-		return errors.New("invokevirtual not implemented")
+		return r.runMethod(ctx, codeAttribute.Code, *c, *method, parameters)
 	}
 }
 
