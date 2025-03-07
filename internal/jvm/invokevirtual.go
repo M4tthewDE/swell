@@ -8,7 +8,7 @@ import (
 	"github.com/m4tthewde/swell/internal/class"
 )
 
-func invokevirtual(r *Runner, ctx context.Context, code []byte) error {
+func invokeVirtual(r *Runner, ctx context.Context, code []byte) error {
 	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 	r.pc += 3
 
@@ -69,7 +69,6 @@ func invokevirtual(r *Runner, ctx context.Context, code []byte) error {
 	if isSignaturePolymorphic(c, method, methodDescriptor) {
 		return errors.New("invokevirtual not implemented for signature polymorphic methods")
 	} else {
-
 		// +1 to include the objectref at position 0
 		parameters, err := r.stack.PopOperands(len(methodDescriptor.Parameters) + 1)
 		if err != nil {
@@ -105,7 +104,7 @@ func hasSingleParamObjectArray(methodDescriptor *class.MethodDescriptor) bool {
 
 	if arrayType, ok := param.(class.ArrayType); ok {
 		if objectType, ok := arrayType.(class.ObjectType); ok {
-			return objectType == "Object"
+			return objectType.ClassName == "java/lang/Object"
 		}
 	}
 

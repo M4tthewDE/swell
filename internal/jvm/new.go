@@ -35,7 +35,7 @@ func new(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	id, err := r.heap.Allocate(c)
+	id, err := r.heap.Allocate(ctx, c)
 	if err != nil {
 		return err
 	}

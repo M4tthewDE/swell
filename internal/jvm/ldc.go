@@ -9,7 +9,6 @@ import (
 )
 
 func ldc(r *Runner, ctx context.Context, code []byte) error {
-
 	index := code[r.pc+1]
 	r.pc += 2
 
@@ -39,7 +38,17 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.stack.PushOperand(stack.ClassReferenceValue{Value: c})
+		classClass, err := r.loader.Load(ctx, "java/lang/Class")
+		if err != nil {
+			return err
+		}
+
+		ref, err := r.heap.Allocate(ctx, classClass)
+		if err != nil {
+			return err
+		}
+
+		return r.stack.PushOperand(stack.ClassReferenceValue{Value: ref, Class: c})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", *cpInfo)
 	}

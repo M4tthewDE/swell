@@ -7,59 +7,73 @@ import (
 )
 
 const BYTE = 'B'
-const CHAR = 'B'
-const DOUBLE = 'B'
-const FLOAT = 'B'
-const INT = 'B'
-const LONG = 'B'
-const SHORT = 'B'
-const BOOLEAN = 'B'
+const CHAR = 'C'
+const DOUBLE = 'D'
+const FLOAT = 'F'
+const INT = 'I'
+const LONG = 'J'
+const SHORT = 'S'
+const BOOLEAN = 'Z'
 
 type BaseType rune
 
+func (b BaseType) isFieldType() {}
+
+func (b BaseType) String() string {
+	return fmt.Sprintf("BaseType[%s]", string(b))
+}
+
 func NewBaseType(r rune) (BaseType, error) {
 	switch r {
-	case 'B':
+	case BYTE:
 		return BaseType(BYTE), nil
-	case 'C':
+	case CHAR:
 		return BaseType(CHAR), nil
-	case 'D':
+	case DOUBLE:
 		return BaseType(DOUBLE), nil
-	case 'F':
+	case FLOAT:
 		return BaseType(FLOAT), nil
-	case 'I':
+	case INT:
 		return BaseType(INT), nil
-	case 'J':
+	case LONG:
 		return BaseType(LONG), nil
-	case 'S':
+	case SHORT:
 		return BaseType(SHORT), nil
-	case 'Z':
+	case BOOLEAN:
 		return BaseType(BOOLEAN), nil
 	default:
 		return 0, fmt.Errorf("invalid base type: %s", string(r))
 	}
 }
 
-type ObjectType string
+type ObjectType struct {
+	ClassName string
+}
 
-func NewObjectType(objectType string) (ObjectType, error) {
+func (o ObjectType) isFieldType() {}
+
+func (o ObjectType) String() string {
+	return fmt.Sprintf("ObjectType[%s]", o.ClassName)
+}
+
+func NewObjectType(objectType string) (*ObjectType, error) {
 	if objectType[0] != 'L' {
-		return "", fmt.Errorf("invalid object type: %s", string(objectType))
+		return nil, fmt.Errorf("invalid object type: %s", string(objectType))
 	}
 
 	index := strings.Index(objectType, ";")
 	if index == -1 {
-		return "", errors.New("invalid object type")
+		return nil, errors.New("invalid object type")
 	}
 
-	return ObjectType(objectType[1:index]), nil
+	return &ObjectType{ClassName: objectType[1:index]}, nil
 }
 
 type ArrayType FieldType
 
 func NewArrayType(arrayType string) (ArrayType, error) {
 	if arrayType[0] != '[' {
-		return "", fmt.Errorf("invalid array type: %s", string(arrayType))
+		return nil, fmt.Errorf("invalid array type: %s", string(arrayType))
 	}
 
 	fieldType, err := NewFieldType(arrayType[1:])
@@ -70,7 +84,9 @@ func NewArrayType(arrayType string) (ArrayType, error) {
 	return ArrayType(fieldType), nil
 }
 
-type FieldType interface{}
+type FieldType interface {
+	isFieldType()
+}
 
 func NewFieldType(fieldType string) (FieldType, error) {
 	baseType, err := NewBaseType(rune(fieldType[0]))
@@ -80,7 +96,7 @@ func NewFieldType(fieldType string) (FieldType, error) {
 
 	objectType, err := NewObjectType(fieldType)
 	if err == nil {
-		return objectType, nil
+		return *objectType, nil
 	}
 
 	return NewArrayType(fieldType)
@@ -89,8 +105,9 @@ func NewFieldType(fieldType string) (FieldType, error) {
 const VOID = 'V'
 
 type MethodDescriptor struct {
-	Parameters       []FieldType
-	ReturnDescriptor FieldType
+	Parameters []FieldType
+	// FIXME: this should not be interface{}
+	ReturnDescriptor interface{}
 }
 
 func NewMethodDescriptor(methodDescriptor string) (*MethodDescriptor, error) {
@@ -109,7 +126,7 @@ func NewMethodDescriptor(methodDescriptor string) (*MethodDescriptor, error) {
 		return nil, errors.New("invalid method descriptor")
 	}
 
-	var returnDescriptor FieldType
+	var returnDescriptor interface{}
 	if methodDescriptor[index+1] == 'V' {
 		returnDescriptor = VOID
 	} else {
@@ -144,7 +161,7 @@ func parseParameters(raw string, parameters []FieldType) ([]FieldType, error) {
 			return nil, err
 		}
 
-		parameters = append(parameters, objectType)
+		parameters = append(parameters, *objectType)
 		return parseParameters(raw[index+1:], parameters)
 	}
 

@@ -37,7 +37,10 @@ func TestStackPopOperand(t *testing.T) {
 	stack := NewStack()
 	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
 
-	value, err := DefaultValue(class.BOOLEAN)
+	baseType, err := class.NewBaseType(class.BOOLEAN)
+	assert.Nil(t, err)
+
+	value, err := DefaultValue(baseType)
 	assert.NotNil(t, err)
 
 	err = stack.PushOperand(value)

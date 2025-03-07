@@ -1,8 +1,9 @@
 package stack
 
 import (
-	"errors"
 	"fmt"
+	"log"
+	"reflect"
 
 	"github.com/google/uuid"
 	"github.com/m4tthewde/swell/internal/class"
@@ -14,29 +15,19 @@ type Value interface {
 }
 
 func DefaultValue(typ class.FieldType) (Value, error) {
-	switch typ.(type) {
-	case BooleanValue:
-		return BooleanValue{Value: false}, nil
-	case ByteValue:
-		return ByteValue{Value: 0}, nil
-	case ShortValue:
-		return ShortValue{Value: 0}, nil
-	case IntValue:
-		return IntValue{Value: 0}, nil
-	case LongValue:
-		return LongValue{Value: 0}, nil
-	case CharValue:
-		return CharValue{Value: 0}, nil
-	case FloatValue:
-		return FloatValue{Value: 0}, nil
-	case DoubleValue:
-		return DoubleValue{Value: 0}, nil
-	case ReferenceValue:
+	if _, ok := typ.(class.ObjectType); ok {
 		return ReferenceValue{Value: nil}, nil
-	case ClassReferenceValue:
-		return ClassReferenceValue{Value: nil}, nil
+	}
+
+	switch typ {
+	case class.BaseType('I'):
+		return IntValue{Value: 0}, nil
+	case class.BaseType('J'):
+		return LongValue{Value: 0}, nil
 	default:
-		return nil, errors.New("unknown field type")
+		log.Println(reflect.TypeOf(typ))
+		// TODO: add DefaultValue function to FieldType interface so that switch becomes obsolete
+		return nil, fmt.Errorf("unknown field type %s", typ)
 	}
 }
 
@@ -113,11 +104,13 @@ func (v ReferenceValue) String() string {
 }
 
 type ClassReferenceValue struct {
-	Value *class.Class
+	// reference to the Class object
+	Value *uuid.UUID
+	Class *class.Class
 }
 
 func (v ClassReferenceValue) String() string {
-	return fmt.Sprintf("ClassReference=%s", v.Value.Name)
+	return fmt.Sprintf("ClassReference=%s", v.Class.Name)
 }
 
 func (v BooleanValue) isValue()        {}
