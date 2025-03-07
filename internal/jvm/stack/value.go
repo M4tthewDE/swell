@@ -2,8 +2,6 @@ package stack
 
 import (
 	"fmt"
-	"log"
-	"reflect"
 
 	"github.com/google/uuid"
 	"github.com/m4tthewde/swell/internal/class"
@@ -25,7 +23,6 @@ func DefaultValue(typ class.FieldType) (Value, error) {
 	case class.BaseType('J'):
 		return LongValue{Value: 0}, nil
 	default:
-		log.Println(reflect.TypeOf(typ))
 		// TODO: add DefaultValue function to FieldType interface so that switch becomes obsolete
 		return nil, fmt.Errorf("unknown field type %s", typ)
 	}
