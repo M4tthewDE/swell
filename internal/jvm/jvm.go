@@ -284,7 +284,9 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 		}
 
 		return nil, r.runMethod(ctx, code.Code, c, *method, operands)
+	} else if c.Name == "java/lang/Class" && methodName == "registerNatives" {
+		return nil, nil
 	} else {
-		return nil, errors.New("native method not implemented")
+		return nil, fmt.Errorf("native method %s in %s not implemented", methodName, c.Name)
 	}
 }
