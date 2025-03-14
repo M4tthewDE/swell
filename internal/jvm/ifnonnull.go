@@ -8,7 +8,6 @@ import (
 )
 
 func ifnonnull(r *Runner) error {
-	r.pc += 1
 	operands, err := r.stack.PopOperands(1)
 	if err != nil {
 		return err
@@ -16,6 +15,7 @@ func ifnonnull(r *Runner) error {
 
 	if objectref, ok := operands[0].(stack.ReferenceValue); ok {
 		if objectref.IsNull() {
+			r.pc += 3
 			return nil
 		} else {
 			return errors.New("not implemented: ifnonnull jump")
