@@ -119,6 +119,26 @@ func (s *Stack) GetLocalVariable(n int) (Value, error) {
 	return frame.localVariables[n], nil
 }
 
+func (s *Stack) SetLocalVariable(n int, v Value) error {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return err
+	}
+
+	for {
+		if len(frame.localVariables) == n+1 {
+			break
+		}
+
+		frame.localVariables = append(frame.localVariables, nil)
+	}
+
+	frame.localVariables[n] = v
+	s.frames[len(s.frames)-1] = *frame
+
+	return nil
+}
+
 func (s *Stack) CurrentConstantPool() (*class.ConstantPool, error) {
 	frame, err := s.activeFrame()
 	if err != nil {

@@ -25,7 +25,7 @@ func TestStackPushOperand(t *testing.T) {
 	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
 
 	value := BooleanValue{Value: false}
-	err := stack.PushOperand(BooleanValue{Value: false})
+	err := stack.PushOperand(value)
 	assert.Nil(t, err)
 
 	operands, err := stack.PopOperands(1)
@@ -59,7 +59,7 @@ func TestStackPushOperandInvoker(t *testing.T) {
 	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{})
 
 	value := BooleanValue{Value: false}
-	err := stack.PushOperandInvoker(BooleanValue{Value: false})
+	err := stack.PushOperandInvoker(value)
 	assert.Nil(t, err)
 
 	err = stack.Pop()
@@ -68,4 +68,17 @@ func TestStackPushOperandInvoker(t *testing.T) {
 	operands, err := stack.PopOperands(1)
 	assert.Nil(t, err)
 	assert.Equal(t, value, operands[0])
+}
+
+func TestStackSetLocalVariable(t *testing.T) {
+	stack := NewStack()
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+
+	value := BooleanValue{Value: false}
+	err := stack.SetLocalVariable(0, value)
+	assert.Nil(t, err)
+
+	variable, err := stack.GetLocalVariable(0)
+	assert.Nil(t, err)
+	assert.Equal(t, value, variable)
 }

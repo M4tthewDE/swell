@@ -78,6 +78,10 @@ const InvokeSpecialOp = 0xb7
 const InvokeStaticOp = 0xb8
 const NewOp = 0xbb
 const DupOp = 0x59
+const Astore0 = 0x4b
+const Astore1 = 0x4c
+const Astore2 = 0x4d
+const Astore3 = 0x4e
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -120,6 +124,18 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case AReturn:
 			log.Info("areturn")
 			return areturn(r)
+		case Astore0:
+			log.Info("astore_0")
+			astore(r, 0)
+		case Astore1:
+			log.Info("astore_1")
+			astore(r, 1)
+		case Astore2:
+			log.Info("astore_2")
+			astore(r, 2)
+		case Astore3:
+			log.Info("astore_3")
+			astore(r, 3)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
