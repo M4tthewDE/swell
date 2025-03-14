@@ -68,7 +68,10 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 }
 
 const LdcOp = 0x12
-const Aload0Op = 0x2a
+const Aload0 = 0x2a
+const Aload1 = 0x2b
+const Aload2 = 0x2c
+const Aload3 = 0x2d
 const AReturn = 0xb0
 const RetOp = 0xb1
 const GetStaticOp = 0xb2
@@ -100,9 +103,18 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case LdcOp:
 			log.Info("ldc")
 			err = ldc(r, ctx, code)
-		case Aload0Op:
+		case Aload0:
 			log.Info("aload_0")
 			err = aload(r, 0)
+		case Aload1:
+			log.Info("aload_1")
+			err = aload(r, 1)
+		case Aload2:
+			log.Info("aload_2")
+			err = aload(r, 2)
+		case Aload3:
+			log.Info("aload_3")
+			err = aload(r, 3)
 		case GetStaticOp:
 			log.Info("getstatic")
 			err = getStatic(r, ctx, code)
