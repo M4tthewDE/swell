@@ -67,6 +67,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 	return nil
 }
 
+const Nop = 0x00
 const LdcOp = 0x12
 const Aload0 = 0x2a
 const Aload1 = 0x2b
@@ -152,6 +153,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IfNonNull:
 			log.Info("ifnonull")
 			ifnonnull(r)
+		case Nop:
+			log.Info("nop")
+			r.pc += 1
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
