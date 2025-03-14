@@ -100,6 +100,10 @@ func (v ReferenceValue) String() string {
 	return fmt.Sprintf("Reference=%s", v.Value)
 }
 
+func (v ReferenceValue) IsNull() bool {
+	return v.Value == nil
+}
+
 type ClassReferenceValue struct {
 	// reference to the Class object
 	Value *uuid.UUID

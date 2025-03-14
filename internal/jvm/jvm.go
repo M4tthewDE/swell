@@ -85,6 +85,7 @@ const Astore0 = 0x4b
 const Astore1 = 0x4c
 const Astore2 = 0x4d
 const Astore3 = 0x4e
+const IfNonNull = 0xc7
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -148,6 +149,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case Astore3:
 			log.Info("astore_3")
 			astore(r, 3)
+		case IfNonNull:
+			log.Info("ifnonull")
+			ifnonnull(r)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
