@@ -53,7 +53,7 @@ func (v ShortValue) String() string {
 }
 
 type IntValue struct {
-	Value uint32
+	Value int32
 }
 
 func (v IntValue) String() string {

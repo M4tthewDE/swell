@@ -68,6 +68,13 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 }
 
 const Nop = 0x00
+const IConstM1 = 0x2
+const IConst0 = 0x3
+const IConst1 = 0x4
+const IConst2 = 0x5
+const IConst3 = 0x6
+const IConst4 = 0x7
+const IConst5 = 0x8
 const LdcOp = 0x12
 const Aload0 = 0x2a
 const Aload1 = 0x2b
@@ -153,6 +160,27 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IfNonNull:
 			log.Info("ifnonull")
 			ifnonnull(r)
+		case IConstM1:
+			log.Info("iconst_m1")
+			iconst(r, -1)
+		case IConst0:
+			log.Info("iconst_0")
+			iconst(r, 0)
+		case IConst1:
+			log.Info("iconst_1")
+			iconst(r, 1)
+		case IConst2:
+			log.Info("iconst_2")
+			iconst(r, 2)
+		case IConst3:
+			log.Info("iconst_3")
+			iconst(r, 3)
+		case IConst4:
+			log.Info("iconst_4")
+			iconst(r, 4)
+		case IConst5:
+			log.Info("iconst_5")
+			iconst(r, 5)
 		case Nop:
 			log.Info("nop")
 			r.pc += 1
