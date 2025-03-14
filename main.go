@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
+	"strings"
 
 	"github.com/m4tthewde/swell/internal/jvm"
 	"github.com/m4tthewde/swell/internal/logger"
@@ -18,15 +20,39 @@ func main() {
 		log.Fatalln("no class provided")
 	}
 
-	className := os.Args[1]
-
-	log.Infof("running %s", className)
-
-	ctx := logger.OnContext(context.Background(), log)
-	runner := jvm.NewRunner()
-
-	err = runner.RunMain(ctx, className)
+	mainClassName, err := getMainClassName()
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	classPath, err := getClassPath()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Infof("running %s using class path %s", mainClassName, classPath)
+
+	ctx := logger.OnContext(context.Background(), log)
+	runner := jvm.NewRunner(classPath)
+
+	err = runner.RunMain(ctx, mainClassName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func getMainClassName() (string, error) {
+	if len(os.Args) < 2 {
+		return "", errors.New("no main class provided")
+	}
+
+	return os.Args[1], nil
+}
+
+func getClassPath() ([]string, error) {
+	if len(os.Args) < 3 {
+		return nil, errors.New("no class path provided")
+	}
+
+	return strings.Split(os.Args[2], ":"), nil
 }

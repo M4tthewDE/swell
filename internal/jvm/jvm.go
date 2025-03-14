@@ -21,14 +21,15 @@ type Runner struct {
 	heap                  Heap
 }
 
-func NewRunner() Runner {
+func NewRunner(classPath []string) Runner {
 	return Runner{
 		classBeingInitialized: "",
-		initializedClasses:    make(map[string]struct{}),
-		pc:                    0,
-		loader:                loader.NewLoader(),
-		stack:                 stack.NewStack(),
-		heap:                  NewHeap(),
+		// FIXME: is there a better data structure for this?
+		initializedClasses: make(map[string]struct{}),
+		pc:                 0,
+		loader:             loader.NewLoader(classPath),
+		stack:              stack.NewStack(),
+		heap:               NewHeap(),
 	}
 
 }

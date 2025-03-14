@@ -5,8 +5,10 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
@@ -14,11 +16,15 @@ import (
 )
 
 type Loader struct {
-	classes map[string]class.Class
+	classPath []string
+	classes   map[string]class.Class
 }
 
-func NewLoader() Loader {
-	return Loader{classes: make(map[string]class.Class)}
+func NewLoader(classPath []string) Loader {
+	return Loader{
+		classes:   make(map[string]class.Class),
+		classPath: classPath,
+	}
 }
 
 func (l *Loader) Load(ctx context.Context, className string) (*class.Class, error) {
@@ -31,7 +37,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 
 	log.Infof("loading %s", className)
 
-	r, err := getReader(className)
+	r, err := getReader(className, l.classPath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +58,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 	return class, nil
 }
 
-func getReader(className string) (io.ReadCloser, error) {
+func getReader(className string, classPath []string) (io.ReadCloser, error) {
 	javaHome := os.Getenv("JAVA_HOME")
 	if javaHome == "" {
 		return nil, errors.New("JAVA_HOME not set")
@@ -74,17 +80,20 @@ func getReader(className string) (io.ReadCloser, error) {
 		}
 	}
 
-	dirEntries, err := os.ReadDir(".")
-	if err != nil {
-		return nil, err
-	}
+	for _, classPathDir := range classPath {
+		dirEntries, err := os.ReadDir(filepath.Join(".", classPathDir))
+		if err != nil {
+			return nil, fmt.Errorf("class path dir %s not found: %v", classPathDir, err)
+		}
 
-	for _, entry := range dirEntries {
-		if entry.Name() == className+".class" {
-			if !entry.IsDir() {
-				return os.Open("./" + entry.Name())
+		for _, entry := range dirEntries {
+			if entry.Name() == className+".class" {
+				if !entry.IsDir() {
+					return os.Open(filepath.Join(".", classPathDir, entry.Name()))
+				}
 			}
 		}
+
 	}
 
 	return nil, errors.New("class not found: " + className)
