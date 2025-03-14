@@ -69,6 +69,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 
 const LdcOp = 0x12
 const Aload0Op = 0x2a
+const AReturn = 0xb0
 const RetOp = 0xb1
 const GetStaticOp = 0xb2
 const GetField = 0xb4
@@ -116,6 +117,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case RetOp:
 			log.Info("ret")
 			return ret(r)
+		case AReturn:
+			log.Info("areturn")
+			return areturn(r)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 

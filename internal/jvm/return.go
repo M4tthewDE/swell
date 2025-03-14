@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
 func ret(r *Runner) error {
@@ -32,4 +33,18 @@ func ret(r *Runner) error {
 	}
 
 	return nil
+}
+
+func areturn(r *Runner) error {
+	operands, err := r.stack.PopOperands(1)
+	if err != nil {
+		return err
+	}
+
+	if objectref, ok := operands[0].(stack.ReferenceValue); ok {
+		// FIXME: check assignment compatibility according with JLS §5.2
+		return r.stack.PushOperandInvoker(objectref)
+	}
+
+	return fmt.Errorf("operand has to be reference, is %s", operands[0])
 }

@@ -18,7 +18,7 @@ func TestRunnerMain(t *testing.T) {
 
 	err = runner.RunMain(ctx, "Main")
 
-	assert.Equal(t, "unknown instruction b0\n\tjava.lang.Class.getClassLoader0()\n\tjava.lang.Class.desiredAssertionStatus()\n\tjava.lang.invoke.MethodHandles.<clinit>()\n\tjdk.internal.access.SharedSecrets.<clinit>()\n\tjava.lang.System.setJavaLangAccess()\n\tjava.lang.System.initPhase1()\n\tjava.lang.System.<clinit>()\n\tMain.main()", err.Error())
+	assert.Equal(t, "unknown instruction 4c\n\tjava.lang.Class.desiredAssertionStatus()\n\tjava.lang.invoke.MethodHandles.<clinit>()\n\tjdk.internal.access.SharedSecrets.<clinit>()\n\tjava.lang.System.setJavaLangAccess()\n\tjava.lang.System.initPhase1()\n\tjava.lang.System.<clinit>()\n\tMain.main()", err.Error())
 	assert.Equal(t, "java/lang/invoke/MethodHandles", runner.classBeingInitialized)
 	assert.Equal(t, map[string]struct{}{
 		"Main":               {},

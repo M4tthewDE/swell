@@ -85,6 +85,19 @@ func (s *Stack) PushOperand(operand Value) error {
 	return nil
 }
 
+func (s *Stack) PushOperandInvoker(operand Value) error {
+	if len(s.frames) < 2 {
+		return errors.New("stack has no invoker")
+	}
+
+	frame := s.frames[len(s.frames)-2]
+
+	frame.operands = append(frame.operands, operand)
+	s.frames[len(s.frames)-2] = frame
+
+	return nil
+}
+
 func (s *Stack) GetOperand() (Value, error) {
 	frame, err := s.activeFrame()
 	if err != nil {

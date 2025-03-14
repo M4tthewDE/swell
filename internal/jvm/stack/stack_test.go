@@ -52,3 +52,20 @@ func TestStackPopOperand(t *testing.T) {
 
 	assert.Panics(t, func() { stack.PopOperands(1) })
 }
+
+func TestStackPushOperandInvoker(t *testing.T) {
+	stack := NewStack()
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{})
+
+	value := BooleanValue{Value: false}
+	err := stack.PushOperandInvoker(BooleanValue{Value: false})
+	assert.Nil(t, err)
+
+	err = stack.Pop()
+	assert.Nil(t, err)
+
+	operands, err := stack.PopOperands(1)
+	assert.Nil(t, err)
+	assert.Equal(t, value, operands[0])
+}
