@@ -83,6 +83,7 @@ const Aload3 = 0x2d
 const AReturn = 0xb0
 const RetOp = 0xb1
 const GetStaticOp = 0xb2
+const PutStatic = 0xb3
 const GetField = 0xb4
 const InvokeVirtual = 0xb6
 const InvokeSpecialOp = 0xb7
@@ -185,6 +186,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case ANewArray:
 			log.Info("anwarray")
 			err = anewarray(r, ctx, code)
+		case PutStatic:
+			log.Info("putstatic")
+			err = putstatic(r, ctx, code)
 		case Nop:
 			log.Info("nop")
 			r.pc += 1

@@ -12,19 +12,36 @@ import (
 	"strings"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 	"github.com/m4tthewde/swell/internal/logger"
 )
 
+type LoaderClass struct {
+	class  class.Class
+	fields map[string]stack.Value
+}
+
 type Loader struct {
 	classPath []string
-	classes   map[string]class.Class
+	classes   map[string]LoaderClass
 }
 
 func NewLoader(classPath []string) Loader {
 	return Loader{
-		classes:   make(map[string]class.Class),
+		classes:   make(map[string]LoaderClass),
 		classPath: classPath,
 	}
+}
+
+func (l *Loader) SetField(className string, fieldName string, value stack.Value) error {
+	loaderClass, ok := l.classes[className]
+	if !ok {
+		return fmt.Errorf("class %s is not loaded", className)
+	}
+
+	loaderClass.fields[fieldName] = value
+	l.classes[className] = loaderClass
+	return nil
 }
 
 func (l *Loader) Load(ctx context.Context, className string) (*class.Class, error) {
@@ -32,7 +49,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 
 	c, ok := l.classes[className]
 	if ok {
-		return &c, nil
+		return &c.class, nil
 	}
 
 	log.Infof("loading %s", className)
@@ -51,7 +68,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 		return nil, err
 	}
 
-	l.classes[className] = *class
+	l.classes[className] = LoaderClass{class: *class, fields: make(map[string]stack.Value)}
 
 	log.Infof("loaded %s", className)
 
