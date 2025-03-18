@@ -10,12 +10,18 @@ import (
 	"github.com/m4tthewde/swell/internal/logger"
 )
 
+type HeapItem interface {
+	IsHeapItem()
+}
+
 type Object struct {
 	className string
 	fields    map[string]stack.Value
 }
 
-func NewObject(name string, fields map[string]stack.Value) Object {
+func (o Object) IsHeapItem() {}
+
+func newObject(name string, fields map[string]stack.Value) Object {
 	return Object{className: name, fields: fields}
 }
 
@@ -28,15 +34,21 @@ func (o *Object) GetFieldValue(name string) (stack.Value, error) {
 	return value, nil
 }
 
+type Array struct {
+	items []stack.Value
+}
+
+func (a Array) IsHeapItem() {}
+
 type Heap struct {
-	objects map[uuid.UUID]Object
+	items map[uuid.UUID]HeapItem
 }
 
 func NewHeap() Heap {
-	return Heap{objects: make(map[uuid.UUID]Object, 0)}
+	return Heap{items: make(map[uuid.UUID]HeapItem, 0)}
 }
 
-func (h *Heap) Allocate(ctx context.Context, c *class.Class) (*uuid.UUID, error) {
+func (h *Heap) AllocateObject(ctx context.Context, c *class.Class) (*uuid.UUID, error) {
 	log := logger.FromContext(ctx)
 	log.Infof("allocating %s object", c.Name)
 
@@ -67,16 +79,32 @@ func (h *Heap) Allocate(ctx context.Context, c *class.Class) (*uuid.UUID, error)
 	}
 
 	id := uuid.New()
-	h.objects[id] = NewObject(c.Name, fields)
+	h.items[id] = newObject(c.Name, fields)
 
 	return &id, nil
 }
 
 func (h *Heap) GetObject(id uuid.UUID) (*Object, error) {
-	object, ok := h.objects[id]
+	item, ok := h.items[id]
 	if !ok {
 		return nil, fmt.Errorf("object with id %s not found", id)
 	}
 
-	return &object, nil
+	if object, ok := item.(Object); ok {
+		return &object, nil
+	}
+
+	return nil, fmt.Errorf("object with id %s not found", id)
+}
+
+func (h *Heap) AllocateDefaultArray(ctx context.Context, size int, defaultValue stack.Value) (*uuid.UUID, error) {
+	items := make([]stack.Value, size)
+	for range size {
+		items = append(items, defaultValue)
+	}
+
+	id := uuid.New()
+	h.items[id] = Array{items: items}
+
+	return &id, nil
 }

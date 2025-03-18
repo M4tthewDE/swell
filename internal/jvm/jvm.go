@@ -88,6 +88,7 @@ const InvokeVirtual = 0xb6
 const InvokeSpecialOp = 0xb7
 const InvokeStaticOp = 0xb8
 const NewOp = 0xbb
+const ANewArray = 0xbd
 const DupOp = 0x59
 const Astore0 = 0x4b
 const Astore1 = 0x4c
@@ -147,40 +148,43 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			return areturn(r)
 		case Astore0:
 			log.Info("astore_0")
-			astore(r, 0)
+			err = astore(r, 0)
 		case Astore1:
 			log.Info("astore_1")
-			astore(r, 1)
+			err = astore(r, 1)
 		case Astore2:
 			log.Info("astore_2")
-			astore(r, 2)
+			err = astore(r, 2)
 		case Astore3:
 			log.Info("astore_3")
-			astore(r, 3)
+			err = astore(r, 3)
 		case IfNonNull:
 			log.Info("ifnonull")
-			ifnonnull(r)
+			err = ifnonnull(r)
 		case IConstM1:
 			log.Info("iconst_m1")
-			iconst(r, -1)
+			err = iconst(r, -1)
 		case IConst0:
 			log.Info("iconst_0")
-			iconst(r, 0)
+			err = iconst(r, 0)
 		case IConst1:
 			log.Info("iconst_1")
-			iconst(r, 1)
+			err = iconst(r, 1)
 		case IConst2:
 			log.Info("iconst_2")
-			iconst(r, 2)
+			err = iconst(r, 2)
 		case IConst3:
 			log.Info("iconst_3")
-			iconst(r, 3)
+			err = iconst(r, 3)
 		case IConst4:
 			log.Info("iconst_4")
-			iconst(r, 4)
+			err = iconst(r, 4)
 		case IConst5:
 			log.Info("iconst_5")
-			iconst(r, 5)
+			err = iconst(r, 5)
+		case ANewArray:
+			log.Info("anwarray")
+			err = anewarray(r, ctx, code)
 		case Nop:
 			log.Info("nop")
 			r.pc += 1

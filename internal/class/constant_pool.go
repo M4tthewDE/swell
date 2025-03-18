@@ -38,12 +38,12 @@ func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*Con
 	return &ConstantPool{Infos: infos}, nil
 }
 
-func (cp *ConstantPool) Get(index int) (*CpInfo, error) {
+func (cp *ConstantPool) Get(index int) (CpInfo, error) {
 	if index >= len(cp.Infos) {
 		return nil, fmt.Errorf("invalid constant pool index: %d", index)
 	}
 
-	return &cp.Infos[index], nil
+	return cp.Infos[index], nil
 }
 
 func (cp *ConstantPool) GetUtf8(n uint16) (string, error) {

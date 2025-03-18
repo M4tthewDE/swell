@@ -22,11 +22,11 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	if !isLoadable(*cpInfo) {
-		return fmt.Errorf("%s ist not loadable", *cpInfo)
+	if !isLoadable(cpInfo) {
+		return fmt.Errorf("%s ist not loadable", cpInfo)
 	}
 
-	switch info := (*cpInfo).(type) {
+	switch info := cpInfo.(type) {
 	case class.ClassInfo:
 		className, err := pool.GetUtf8(info.NameIndex)
 		if err != nil {
@@ -43,14 +43,14 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		ref, err := r.heap.Allocate(ctx, classClass)
+		ref, err := r.heap.AllocateObject(ctx, classClass)
 		if err != nil {
 			return err
 		}
 
 		return r.stack.PushOperand(stack.ClassReferenceValue{Value: ref, Class: c})
 	default:
-		return fmt.Errorf("ldc not implemented for %s", *cpInfo)
+		return fmt.Errorf("ldc not implemented for %s", cpInfo)
 	}
 
 }
