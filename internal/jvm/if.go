@@ -23,6 +23,17 @@ func ifne(r *Runner, code []byte) error {
 		return nil
 	}
 
+	if val, ok := operands[0].(stack.ByteValue); ok {
+		if val.Value != 0 {
+			index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
+			r.pc += int(index)
+			return nil
+		}
+
+		r.pc += 3
+		return nil
+	}
+
 	return fmt.Errorf("operand has to be int, is %s", operands[0])
 
 }
@@ -35,6 +46,17 @@ func ifeq(r *Runner, code []byte) error {
 
 	if val, ok := operands[0].(stack.IntValue); ok {
 		if val.Value == 0 {
+			index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
+			r.pc += int(index)
+			return nil
+		}
+
+		r.pc += 3
+		return nil
+	}
+
+	if val, ok := operands[0].(stack.BooleanValue); ok {
+		if !val.Value {
 			index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
 			r.pc += int(index)
 			return nil

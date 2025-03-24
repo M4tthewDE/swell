@@ -105,7 +105,9 @@ const ArrayLength = 0xbe
 const IfEq = 0x99
 const IntShiftRight = 0x7a
 const IStore2 = 0x3d
+const ILoad1 = 0x1b
 const ILoad2 = 0x1c
+const ISub = 0x64
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -230,9 +232,15 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IStore2:
 			log.Info("istore_2")
 			err = istore(r, 2)
+		case ILoad1:
+			log.Info("iload_1")
+			err = iload(r, 1)
 		case ILoad2:
 			log.Info("iload_2")
 			err = iload(r, 2)
+		case ISub:
+			log.Info("isub")
+			err = isub(r)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
@@ -364,6 +372,8 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 	} else if c.Name == "java/lang/Class" && methodName == "registerNatives" {
 		return nil, nil
 	} else if c.Name == "java/lang/Class" && methodName == "desiredAssertionStatus0" {
+		return stack.BooleanValue{Value: true}, nil
+	} else if c.Name == "java/lang/StringUTF16" && methodName == "isBigEndian" {
 		return stack.BooleanValue{Value: true}, nil
 	} else {
 		return nil, fmt.Errorf("native method %s in %s not implemented", methodName, c.Name)
