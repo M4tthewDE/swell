@@ -86,5 +86,5 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 
 	operands = append(operands, params...)
 
-	return r.runMethod(ctx, codeAttribute.Code, *c, *method, operands)
+	return r.runMethod(ctx, codeAttribute, *c, *method, operands)
 }

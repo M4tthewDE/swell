@@ -108,3 +108,14 @@ func (h *Heap) AllocateDefaultArray(ctx context.Context, size int, defaultValue 
 
 	return &id, nil
 }
+
+func (h *Heap) SetField(id uuid.UUID, fieldName string, value stack.Value) error {
+	obj, err := h.GetObject(id)
+	if err != nil {
+		return err
+	}
+
+	obj.fields[fieldName] = value
+	h.items[id] = obj
+	return nil
+}

@@ -80,7 +80,7 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.runMethod(ctx, code.Code, *c, *method, operands)
+		return r.runMethod(ctx, code, *c, *method, operands)
 	} else {
 		val, err := r.runNative(ctx, *c, method, operands)
 		if err != nil {

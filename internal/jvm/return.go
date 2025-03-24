@@ -48,3 +48,23 @@ func areturn(r *Runner) error {
 
 	return fmt.Errorf("operand has to be reference, is %s", operands[0])
 }
+
+func ireturn(r *Runner) error {
+	operands, err := r.stack.PopOperands(1)
+	if err != nil {
+		return err
+	}
+
+	if bool, ok := operands[0].(stack.BooleanValue); ok {
+		var val int32
+		if bool.Value {
+			val = 1
+		} else {
+			val = 0
+		}
+
+		return r.stack.PushOperandInvoker(stack.IntValue{Value: val})
+	}
+
+	return fmt.Errorf("operand has to be int, is %s", operands[0])
+}

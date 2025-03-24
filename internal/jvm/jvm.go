@@ -59,7 +59,7 @@ func (r *Runner) RunMain(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, *main, make([]stack.Value, 0))
+	err = r.runMethod(ctx, code, *c, *main, make([]stack.Value, 0))
 	if err != nil {
 		return err
 	}
@@ -96,12 +96,18 @@ const Astore1 = 0x4c
 const Astore2 = 0x4d
 const Astore3 = 0x4e
 const IfNonNull = 0xc7
+const IReturn = 0xac
+const IfNe = 0x9a
+const GoTo = 0xa7
+const LdcWide = 0x13
+const PutField = 0xb5
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
 
 	for {
 		instruction := code[r.pc]
+		log.Infof("pc: %d ", r.pc)
 
 		var err error
 		switch instruction {
@@ -113,7 +119,10 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = invokeVirtual(r, ctx, code)
 		case LdcOp:
 			log.Info("ldc")
-			err = ldc(r, ctx, code)
+			err = ldcNormal(r, ctx, code)
+		case LdcWide:
+			log.Info("ldc_w")
+			err = ldcWide(r, ctx, code)
 		case Aload0:
 			log.Info("aload_0")
 			err = aload(r, 0)
@@ -192,6 +201,18 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case Nop:
 			log.Info("nop")
 			r.pc += 1
+		case IReturn:
+			log.Info("ireturn")
+			return ireturn(r)
+		case IfNe:
+			log.Info("ifne")
+			err = ifne(r, code)
+		case GoTo:
+			log.Info("goto")
+			err = goTo(r, code)
+		case PutField:
+			log.Info("putfield")
+			err = putField(r, ctx, code)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
@@ -245,7 +266,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	err = r.runMethod(ctx, code.Code, *c, *clinit, make([]stack.Value, 0))
+	err = r.runMethod(ctx, code, *c, *clinit, make([]stack.Value, 0))
 	if err != nil {
 		return err
 	}
@@ -255,7 +276,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	return nil
 }
 
-func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, method class.Method, parameters []stack.Value) error {
+func (r *Runner) runMethod(ctx context.Context, code *class.CodeAttribute, c class.Class, method class.Method, parameters []stack.Value) error {
 	log := logger.FromContext(ctx)
 
 	name, err := c.ConstantPool.GetUtf8(method.NameIndex)
@@ -269,7 +290,7 @@ func (r *Runner) runMethod(ctx context.Context, code []byte, c class.Class, meth
 	returnPc := r.pc
 	r.pc = 0
 
-	err = r.run(ctx, code)
+	err = r.run(ctx, code.Code)
 	if err != nil {
 		err = fmt.Errorf("%v\n\t%s.%s()", err, strings.ReplaceAll(c.Name, "/", "."), name)
 		return err
@@ -319,9 +340,11 @@ func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Met
 			return nil, err
 		}
 
-		return nil, r.runMethod(ctx, code.Code, c, *method, operands)
+		return nil, r.runMethod(ctx, code, c, *method, operands)
 	} else if c.Name == "java/lang/Class" && methodName == "registerNatives" {
 		return nil, nil
+	} else if c.Name == "java/lang/Class" && methodName == "desiredAssertionStatus0" {
+		return stack.BooleanValue{Value: true}, nil
 	} else {
 		return nil, fmt.Errorf("native method %s in %s not implemented", methodName, c.Name)
 	}

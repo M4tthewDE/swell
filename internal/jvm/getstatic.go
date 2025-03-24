@@ -3,7 +3,6 @@ package jvm
 import (
 	"context"
 	"errors"
-	"fmt"
 )
 
 func getStatic(r *Runner, ctx context.Context, code []byte) error {
@@ -59,5 +58,10 @@ func getStatic(r *Runner, ctx context.Context, code []byte) error {
 		return errors.New("static field not found")
 	}
 
-	return fmt.Errorf("not implemented: getstatic %s", fieldName)
+	fieldValue, err := r.loader.GetField(className, fieldName)
+	if err != nil {
+		return err
+	}
+
+	return r.stack.PushOperand(fieldValue)
 }

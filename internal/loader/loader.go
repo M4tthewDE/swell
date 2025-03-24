@@ -44,6 +44,20 @@ func (l *Loader) SetField(className string, fieldName string, value stack.Value)
 	return nil
 }
 
+func (l *Loader) GetField(className string, fieldName string) (stack.Value, error) {
+	loaderClass, ok := l.classes[className]
+	if !ok {
+		return nil, fmt.Errorf("class %s is not loaded", className)
+	}
+
+	field, ok := loaderClass.fields[fieldName]
+	if !ok {
+		return nil, fmt.Errorf("field %s not found in %s", fieldName, className)
+	}
+
+	return field, nil
+}
+
 func (l *Loader) Load(ctx context.Context, className string) (*class.Class, error) {
 	log := logger.FromContext(ctx)
 

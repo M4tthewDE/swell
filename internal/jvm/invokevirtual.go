@@ -80,7 +80,7 @@ func invokeVirtual(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.runMethod(ctx, codeAttribute.Code, *c, *method, parameters)
+		return r.runMethod(ctx, codeAttribute, *c, *method, parameters)
 	}
 }
 

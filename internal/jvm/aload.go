@@ -1,7 +1,7 @@
 package jvm
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
@@ -13,13 +13,15 @@ func aload(r *Runner, n int) error {
 		return err
 	}
 
-	if reference, ok := variable.(stack.ReferenceValue); ok {
-		return r.stack.PushOperand(reference)
+	switch val := variable.(type) {
+	case stack.ReferenceValue:
+		return r.stack.PushOperand(val)
+	case stack.ClassReferenceValue:
+		return r.stack.PushOperand(val)
+	case stack.StringReferenceValue:
+		return r.stack.PushOperand(val)
+	default:
+		return fmt.Errorf("invalid variable type: %s", val)
 	}
 
-	if reference, ok := variable.(stack.ClassReferenceValue); ok {
-		return r.stack.PushOperand(reference)
-	}
-
-	return errors.New("invalid variable type")
 }

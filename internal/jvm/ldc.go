@@ -8,10 +8,21 @@ import (
 	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
-func ldc(r *Runner, ctx context.Context, code []byte) error {
+func ldcNormal(r *Runner, ctx context.Context, code []byte) error {
 	index := code[r.pc+1]
 	r.pc += 2
 
+	return ldc(r, ctx, int(index))
+}
+
+func ldcWide(r *Runner, ctx context.Context, code []byte) error {
+	index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
+	r.pc += 3
+
+	return ldc(r, ctx, int(index))
+}
+
+func ldc(r *Runner, ctx context.Context, index int) error {
 	pool, err := r.stack.CurrentConstantPool()
 	if err != nil {
 		return err
@@ -49,6 +60,15 @@ func ldc(r *Runner, ctx context.Context, code []byte) error {
 		}
 
 		return r.stack.PushOperand(stack.ClassReferenceValue{Value: ref, Class: c})
+	case class.IntegerInfo:
+		return r.stack.PushOperand(stack.IntValue{Value: int32(info.Value)})
+	case class.StringInfo:
+		stringValue, err := pool.GetUtf8(info.StringIndex)
+		if err != nil {
+			return err
+		}
+
+		return r.stack.PushOperand(stack.StringReferenceValue{Value: stringValue})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", cpInfo)
 	}
