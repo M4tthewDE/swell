@@ -53,8 +53,18 @@ func getField(r *Runner, ctx context.Context, code []byte) error {
 
 	objectRef := operands[0]
 
-	if _, ok := objectRef.(stack.ReferenceValue); ok {
-		return errors.New("not implemented for reference")
+	if reference, ok := objectRef.(stack.ReferenceValue); ok {
+		object, err := r.heap.GetObject(*reference.Value)
+		if err != nil {
+			return err
+		}
+
+		fieldValue, err := object.GetFieldValue(fieldName)
+		if err != nil {
+			return err
+		}
+
+		return r.stack.PushOperand(fieldValue)
 	}
 
 	if reference, ok := objectRef.(stack.ClassReferenceValue); ok {

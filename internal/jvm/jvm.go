@@ -101,6 +101,7 @@ const IfNe = 0x9a
 const GoTo = 0xa7
 const LdcWide = 0x13
 const PutField = 0xb5
+const ArrayLength = 0xbe
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -213,6 +214,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case PutField:
 			log.Info("putfield")
 			err = putField(r, ctx, code)
+		case ArrayLength:
+			log.Info("arraylength")
+			err = arrayLength(r)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
