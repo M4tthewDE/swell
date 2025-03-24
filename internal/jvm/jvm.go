@@ -108,6 +108,7 @@ const IStore2 = 0x3d
 const ILoad1 = 0x1b
 const ILoad2 = 0x1c
 const ISub = 0x64
+const BiPush = 0x10
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -241,6 +242,11 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case ISub:
 			log.Info("isub")
 			err = isub(r)
+		case BiPush:
+			log.Info("bipush")
+			value := code[r.pc+1]
+			r.pc += 2
+			err = r.stack.PushOperand(stack.IntValue{Value: int32(value)})
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
