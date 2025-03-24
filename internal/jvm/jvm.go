@@ -105,6 +105,7 @@ const ArrayLength = 0xbe
 const IfEq = 0x99
 const IntShiftRight = 0x7a
 const IStore2 = 0x3d
+const ILoad2 = 0x1c
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -229,6 +230,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IStore2:
 			log.Info("istore_2")
 			err = istore(r, 2)
+		case ILoad2:
+			log.Info("iload_2")
+			err = iload(r, 2)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
