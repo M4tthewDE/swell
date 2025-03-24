@@ -39,6 +39,10 @@ type Array struct {
 }
 
 func (a Array) IsHeapItem() {}
+func (a Array) IsValue()    {}
+func (a Array) String() string {
+	return "Array[...]"
+}
 
 type Heap struct {
 	items map[uuid.UUID]HeapItem
@@ -50,7 +54,6 @@ func NewHeap() Heap {
 
 func (h *Heap) AllocateObject(ctx context.Context, c *class.Class) (*uuid.UUID, error) {
 	log := logger.FromContext(ctx)
-	log.Infof("allocating %s object", c.Name)
 
 	fields := make(map[string]stack.Value)
 
@@ -81,6 +84,8 @@ func (h *Heap) AllocateObject(ctx context.Context, c *class.Class) (*uuid.UUID, 
 	id := uuid.New()
 	h.items[id] = newObject(c.Name, fields)
 
+	log.Infof("allocated %s object with id %s", c.Name, id)
+
 	return &id, nil
 }
 
@@ -98,7 +103,7 @@ func (h *Heap) GetObject(id uuid.UUID) (*Object, error) {
 }
 
 func (h *Heap) AllocateDefaultArray(ctx context.Context, size int, defaultValue stack.Value) (*uuid.UUID, error) {
-	items := make([]stack.Value, size)
+	items := make([]stack.Value, 0)
 	for range size {
 		items = append(items, defaultValue)
 	}
@@ -116,6 +121,6 @@ func (h *Heap) SetField(id uuid.UUID, fieldName string, value stack.Value) error
 	}
 
 	obj.fields[fieldName] = value
-	h.items[id] = obj
+	h.items[id] = *obj
 	return nil
 }

@@ -71,5 +71,5 @@ func getField(r *Runner, ctx context.Context, code []byte) error {
 		return r.stack.PushOperand(fieldValue)
 	}
 
-	return errors.New("objectef has to be a reference")
+	return errors.New("objectref has to be a reference")
 }

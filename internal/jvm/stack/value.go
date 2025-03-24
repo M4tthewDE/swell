@@ -8,7 +8,7 @@ import (
 )
 
 type Value interface {
-	isValue()
+	IsValue()
 	String() string
 }
 
@@ -24,6 +24,10 @@ func DefaultValue(typ class.FieldType) (Value, error) {
 		return LongValue{Value: 0}, nil
 	case class.BaseType('Z'):
 		return BooleanValue{Value: false}, nil
+	case class.BaseType('B'):
+		return ByteValue{Value: 0}, nil
+	case class.BaseType('C'):
+		return CharValue{Value: 0}, nil
 	default:
 		// TODO: add DefaultValue function to FieldType interface so that switch becomes obsolete
 		return nil, fmt.Errorf("unknown field type %s", typ)
@@ -116,22 +120,13 @@ func (v ClassReferenceValue) String() string {
 	return fmt.Sprintf("ClassReference=%s", v.Class.Name)
 }
 
-type StringReferenceValue struct {
-	Value string
-}
-
-func (v StringReferenceValue) String() string {
-	return fmt.Sprintf("StringValue=%s", v.Value)
-}
-
-func (v BooleanValue) isValue()         {}
-func (v ByteValue) isValue()            {}
-func (v ShortValue) isValue()           {}
-func (v IntValue) isValue()             {}
-func (v LongValue) isValue()            {}
-func (v CharValue) isValue()            {}
-func (v FloatValue) isValue()           {}
-func (v DoubleValue) isValue()          {}
-func (v ReferenceValue) isValue()       {}
-func (v ClassReferenceValue) isValue()  {}
-func (v StringReferenceValue) isValue() {}
+func (v BooleanValue) IsValue()        {}
+func (v ByteValue) IsValue()           {}
+func (v ShortValue) IsValue()          {}
+func (v IntValue) IsValue()            {}
+func (v LongValue) IsValue()           {}
+func (v CharValue) IsValue()           {}
+func (v FloatValue) IsValue()          {}
+func (v DoubleValue) IsValue()         {}
+func (v ReferenceValue) IsValue()      {}
+func (v ClassReferenceValue) IsValue() {}

@@ -1,27 +1,28 @@
 package jvm
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
-func ifnonnull(r *Runner) error {
+func ifnonnull(r *Runner, code []byte) error {
 	operands, err := r.stack.PopOperands(1)
 	if err != nil {
 		return err
 	}
 
-	if objectref, ok := operands[0].(stack.ReferenceValue); ok {
-		if objectref.IsNull() {
+	switch objectRef := operands[0].(type) {
+	case stack.ReferenceValue:
+		if objectRef.IsNull() {
 			r.pc += 3
 			return nil
 		} else {
-			return errors.New("not implemented: ifnonnull jump")
+			index := (uint16(code[r.pc+1])<<8 | uint16(code[r.pc+2]))
+			r.pc += int(index)
+			return nil
 		}
-
+	default:
+		return fmt.Errorf("invalid operand type: %s", operands[0])
 	}
-
-	return fmt.Errorf("operand has to be reference, is %s", operands[0])
 }

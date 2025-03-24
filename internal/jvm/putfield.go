@@ -78,12 +78,10 @@ func putField(r *Runner, ctx context.Context, code []byte) error {
 }
 
 func isCompatible(fieldType class.FieldType, value stack.Value) bool {
-	switch typ := fieldType.(type) {
+	switch fieldType.(type) {
 	case class.ObjectType:
-		if _, ok := value.(stack.StringReferenceValue); ok {
-			return typ.ClassName == "java/lang/String"
-		}
-		return false
+		_, ok := value.(stack.ReferenceValue)
+		return ok
 	default:
 		return false
 	}

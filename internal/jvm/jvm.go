@@ -170,7 +170,7 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = astore(r, 3)
 		case IfNonNull:
 			log.Info("ifnonull")
-			err = ifnonnull(r)
+			err = ifnonnull(r, code)
 		case IConstM1:
 			log.Info("iconst_m1")
 			err = iconst(r, -1)

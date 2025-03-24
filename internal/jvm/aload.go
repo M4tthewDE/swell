@@ -18,8 +18,6 @@ func aload(r *Runner, n int) error {
 		return r.stack.PushOperand(val)
 	case stack.ClassReferenceValue:
 		return r.stack.PushOperand(val)
-	case stack.StringReferenceValue:
-		return r.stack.PushOperand(val)
 	default:
 		return fmt.Errorf("invalid variable type: %s", val)
 	}

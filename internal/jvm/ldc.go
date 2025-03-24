@@ -68,7 +68,35 @@ func ldc(r *Runner, ctx context.Context, index int) error {
 			return err
 		}
 
-		return r.stack.PushOperand(stack.StringReferenceValue{Value: stringValue})
+		c, err := r.loader.Load(ctx, "java/lang/String")
+		if err != nil {
+			return err
+		}
+
+		strID, err := r.heap.AllocateObject(ctx, c)
+		if err != nil {
+			return err
+		}
+
+		byteArray := make([]stack.Value, 0)
+		for _, b := range []byte(stringValue) {
+			byteArray = append(byteArray, stack.ByteValue{Value: b})
+		}
+
+		var value stack.Value
+		value = Array{items: byteArray}
+
+		err = r.heap.SetField(*strID, "value", value)
+		if err != nil {
+			return err
+		}
+
+		err = r.heap.SetField(*strID, "coder", stack.ByteValue{Value: 1})
+		if err != nil {
+			return err
+		}
+
+		return r.stack.PushOperand(stack.ReferenceValue{Value: strID})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", cpInfo)
 	}
