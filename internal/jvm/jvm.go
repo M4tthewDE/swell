@@ -103,6 +103,7 @@ const LdcWide = 0x13
 const PutField = 0xb5
 const ArrayLength = 0xbe
 const IfEq = 0x99
+const IntShiftRight = 0x7a
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -221,6 +222,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IfEq:
 			log.Info("ifeq")
 			err = ifeq(r, code)
+		case IntShiftRight:
+			log.Info("ishr")
+			err = intShiftRight(r)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 

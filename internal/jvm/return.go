@@ -66,5 +66,13 @@ func ireturn(r *Runner) error {
 		return r.stack.PushOperandInvoker(stack.IntValue{Value: val})
 	}
 
+	if byteValue, ok := operands[0].(stack.ByteValue); ok {
+		return r.stack.PushOperandInvoker(stack.IntValue{Value: int32(byteValue.Value)})
+	}
+
+	if intValue, ok := operands[0].(stack.IntValue); ok {
+		return r.stack.PushOperandInvoker(intValue)
+	}
+
 	return fmt.Errorf("operand has to be int, is %s", operands[0])
 }
