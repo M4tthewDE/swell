@@ -104,6 +104,7 @@ const PutField = 0xb5
 const ArrayLength = 0xbe
 const IfEq = 0x99
 const IntShiftRight = 0x7a
+const IStore2 = 0x3d
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -225,6 +226,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IntShiftRight:
 			log.Info("ishr")
 			err = intShiftRight(r)
+		case IStore2:
+			log.Info("istore_2")
+			err = istore(r, 2)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
