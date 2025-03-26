@@ -3,8 +3,10 @@ package jvm
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
 func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
@@ -82,7 +84,7 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 
 		return r.runMethod(ctx, code, *c, *method, operands)
 	} else {
-		val, err := r.runNative(ctx, *c, method, operands)
+		val, err := runNative(ctx, r, *c, method, operands)
 		if err != nil {
 			return err
 		}
@@ -92,5 +94,52 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		}
 
 		return nil
+	}
+}
+
+func runNative(ctx context.Context, r *Runner, c class.Class, method *class.Method, operands []stack.Value) (stack.Value, error) {
+	descriptor, err := c.ConstantPool.GetUtf8(method.DescriptorIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
+	if err != nil {
+		return nil, err
+	}
+
+	methodName, err := c.ConstantPool.GetUtf8(method.NameIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Name == "java/lang/System" &&
+		methodName == "registerNatives" &&
+		methodDescriptor.ReturnDescriptor == 'V' &&
+		len(methodDescriptor.Parameters) == 0 {
+
+		method, ok, err := c.GetMethod("initPhase1")
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, errors.New("method 'initPhase1' not found")
+		}
+
+		code, err := method.CodeAttribute()
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, r.runMethod(ctx, code, c, *method, operands)
+	} else if c.Name == "java/lang/Class" && methodName == "registerNatives" {
+		return nil, nil
+	} else if c.Name == "java/lang/Class" && methodName == "desiredAssertionStatus0" {
+		return stack.BooleanValue{Value: true}, nil
+	} else if c.Name == "java/lang/StringUTF16" && methodName == "isBigEndian" {
+		return stack.BooleanValue{Value: true}, nil
+	} else {
+		return nil, fmt.Errorf("native method %s in %s not implemented", methodName, c.Name)
 	}
 }

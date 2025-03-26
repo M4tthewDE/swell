@@ -103,7 +103,7 @@ func hasSingleParamObjectArray(methodDescriptor *class.MethodDescriptor) bool {
 	param := methodDescriptor.Parameters[0]
 
 	if arrayType, ok := param.(class.ArrayType); ok {
-		if objectType, ok := arrayType.(class.ObjectType); ok {
+		if objectType, ok := arrayType.FieldType.(class.ObjectType); ok {
 			return objectType.ClassName == "java/lang/Object"
 		}
 	}

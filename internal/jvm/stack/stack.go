@@ -1,10 +1,12 @@
 package stack
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/logger"
 )
 
 type Frame struct {
@@ -19,7 +21,6 @@ func NewFrame(
 	className string,
 	method class.Method,
 	constantPool class.ConstantPool,
-	operands []Value,
 	localVariables []Value,
 ) Frame {
 	return Frame{className: className, method: method, constantPool: constantPool, operands: make([]Value, 0), localVariables: localVariables}
@@ -38,7 +39,7 @@ func (s *Stack) Push(
 	constantPool class.ConstantPool,
 	localVariables []Value,
 ) {
-	frame := NewFrame(className, method, constantPool, []Value{}, localVariables)
+	frame := NewFrame(className, method, constantPool, localVariables)
 	s.frames = append(s.frames, frame)
 }
 
@@ -106,7 +107,7 @@ func (s *Stack) GetOperand() (Value, error) {
 	return frame.operands[len(frame.operands)-1], nil
 }
 
-func (s *Stack) GetLocalVariable(n int) (Value, error) {
+func (s *Stack) GetLocalVariable(ctx context.Context, n int) (Value, error) {
 	frame, err := s.activeFrame()
 	if err != nil {
 		return nil, err
@@ -116,10 +117,13 @@ func (s *Stack) GetLocalVariable(n int) (Value, error) {
 		return nil, fmt.Errorf("no localvariable at %d, len is %d", n, len(frame.localVariables))
 	}
 
+	log := logger.FromContext(ctx)
+	log.Debugw("fetched local variable", "n", n)
+
 	return frame.localVariables[n], nil
 }
 
-func (s *Stack) SetLocalVariable(n int, v Value) error {
+func (s *Stack) SetLocalVariable(ctx context.Context, n int, v Value) error {
 	frame, err := s.activeFrame()
 	if err != nil {
 		return err
@@ -135,6 +139,9 @@ func (s *Stack) SetLocalVariable(n int, v Value) error {
 
 	frame.localVariables[n] = v
 	s.frames[len(s.frames)-1] = *frame
+
+	log := logger.FromContext(ctx)
+	log.Debugw("set local variable", "n", n)
 
 	return nil
 }
@@ -155,4 +162,13 @@ func (s *Stack) CurrentMethod() (*class.Method, error) {
 	}
 
 	return &frame.method, nil
+}
+
+func (s *Stack) CurrentClassName() string {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return ""
+	}
+
+	return frame.className
 }

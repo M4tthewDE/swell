@@ -84,7 +84,7 @@ func (h *Heap) AllocateObject(ctx context.Context, c *class.Class) (*uuid.UUID, 
 	id := uuid.New()
 	h.items[id] = newObject(c.Name, fields)
 
-	log.Infof("allocated %s object with id %s", c.Name, id)
+	log.Infow("allocated object", "id", id, "className", c.Name)
 
 	return &id, nil
 }

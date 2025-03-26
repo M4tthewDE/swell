@@ -1,12 +1,13 @@
 package jvm
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
-func astore(r *Runner, n int) error {
+func astore(ctx context.Context, r *Runner, n int) error {
 	r.pc += 1
 	operands, err := r.stack.PopOperands(1)
 	if err != nil {
@@ -14,7 +15,7 @@ func astore(r *Runner, n int) error {
 	}
 
 	if objectref, ok := operands[0].(stack.ReferenceValue); ok {
-		r.stack.SetLocalVariable(n, objectref)
+		r.stack.SetLocalVariable(ctx, n, objectref)
 		return nil
 	}
 

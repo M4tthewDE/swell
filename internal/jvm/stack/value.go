@@ -17,6 +17,10 @@ func DefaultValue(typ class.FieldType) (Value, error) {
 		return ReferenceValue{Value: nil}, nil
 	}
 
+	if _, ok := typ.(class.ArrayType); ok {
+		return ReferenceValue{Value: nil}, nil
+	}
+
 	switch typ {
 	case class.BaseType('I'):
 		return IntValue{Value: 0}, nil

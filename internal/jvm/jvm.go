@@ -105,148 +105,160 @@ const ArrayLength = 0xbe
 const IfEq = 0x99
 const IntShiftRight = 0x7a
 const IStore2 = 0x3d
+const ILoad0 = 0x1a
 const ILoad1 = 0x1b
 const ILoad2 = 0x1c
 const ISub = 0x64
 const BiPush = 0x10
+const IfLt = 0x9b
+const IfICmpLt = 0xa1
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
 
 	for {
 		instruction := code[r.pc]
-		log.Infof("pc: %d ", r.pc)
+		log.Debugw("instruction", "pc", r.pc)
 
 		var err error
 		switch instruction {
 		case GetField:
-			log.Info("getfield")
+			log.Debug("getfield")
 			err = getField(r, ctx, code)
 		case InvokeVirtual:
-			log.Info("invokevirtual")
+			log.Debug("invokevirtual")
 			err = invokeVirtual(r, ctx, code)
 		case LdcOp:
-			log.Info("ldc")
+			log.Debug("ldc")
 			err = ldcNormal(r, ctx, code)
 		case LdcWide:
-			log.Info("ldc_w")
+			log.Debug("ldc_w")
 			err = ldcWide(r, ctx, code)
 		case Aload0:
-			log.Info("aload_0")
-			err = aload(r, 0)
+			log.Debug("aload_0")
+			err = aload(ctx, r, 0)
 		case Aload1:
-			log.Info("aload_1")
-			err = aload(r, 1)
+			log.Debug("aload_1")
+			err = aload(ctx, r, 1)
 		case Aload2:
-			log.Info("aload_2")
-			err = aload(r, 2)
+			log.Debug("aload_2")
+			err = aload(ctx, r, 2)
 		case Aload3:
-			log.Info("aload_3")
-			err = aload(r, 3)
+			log.Debug("aload_3")
+			err = aload(ctx, r, 3)
 		case GetStaticOp:
-			log.Info("getstatic")
+			log.Debug("getstatic")
 			err = getStatic(r, ctx, code)
 		case InvokeStaticOp:
-			log.Info("invokestatic")
+			log.Debug("invokestatic")
 			err = invokeStatic(r, ctx, code)
 		case NewOp:
-			log.Info("new")
+			log.Debug("new")
 			err = new(r, ctx, code)
 		case DupOp:
-			log.Info("dup")
+			log.Debug("dup")
 			err = dup(r)
 		case InvokeSpecialOp:
-			log.Info("invokespecial")
+			log.Debug("invokespecial")
 			err = invokeSpecial(r, ctx, code)
 		case RetOp:
-			log.Info("ret")
+			log.Debug("ret")
 			return ret(r)
 		case AReturn:
-			log.Info("areturn")
+			log.Debug("areturn")
 			return areturn(r)
 		case Astore0:
-			log.Info("astore_0")
-			err = astore(r, 0)
+			log.Debug("astore_0")
+			err = astore(ctx, r, 0)
 		case Astore1:
-			log.Info("astore_1")
-			err = astore(r, 1)
+			log.Debug("astore_1")
+			err = astore(ctx, r, 1)
 		case Astore2:
-			log.Info("astore_2")
-			err = astore(r, 2)
+			log.Debug("astore_2")
+			err = astore(ctx, r, 2)
 		case Astore3:
-			log.Info("astore_3")
-			err = astore(r, 3)
+			log.Debug("astore_3")
+			err = astore(ctx, r, 3)
 		case IfNonNull:
-			log.Info("ifnonull")
+			log.Debug("ifnonull")
 			err = ifnonnull(r, code)
 		case IConstM1:
-			log.Info("iconst_m1")
+			log.Debug("iconst_m1")
 			err = iconst(r, -1)
 		case IConst0:
-			log.Info("iconst_0")
+			log.Debug("iconst_0")
 			err = iconst(r, 0)
 		case IConst1:
-			log.Info("iconst_1")
+			log.Debug("iconst_1")
 			err = iconst(r, 1)
 		case IConst2:
-			log.Info("iconst_2")
+			log.Debug("iconst_2")
 			err = iconst(r, 2)
 		case IConst3:
-			log.Info("iconst_3")
+			log.Debug("iconst_3")
 			err = iconst(r, 3)
 		case IConst4:
-			log.Info("iconst_4")
+			log.Debug("iconst_4")
 			err = iconst(r, 4)
 		case IConst5:
-			log.Info("iconst_5")
+			log.Debug("iconst_5")
 			err = iconst(r, 5)
 		case ANewArray:
-			log.Info("anwarray")
+			log.Debug("anwarray")
 			err = anewarray(r, ctx, code)
 		case PutStatic:
-			log.Info("putstatic")
+			log.Debug("putstatic")
 			err = putstatic(r, ctx, code)
 		case Nop:
-			log.Info("nop")
+			log.Debug("nop")
 			r.pc += 1
 		case IReturn:
-			log.Info("ireturn")
+			log.Debug("ireturn")
 			return ireturn(r)
 		case IfNe:
-			log.Info("ifne")
+			log.Debug("ifne")
 			err = ifne(r, code)
 		case GoTo:
-			log.Info("goto")
+			log.Debug("goto")
 			err = goTo(r, code)
 		case PutField:
-			log.Info("putfield")
+			log.Debug("putfield")
 			err = putField(r, ctx, code)
 		case ArrayLength:
-			log.Info("arraylength")
+			log.Debug("arraylength")
 			err = arrayLength(r)
 		case IfEq:
-			log.Info("ifeq")
+			log.Debug("ifeq")
 			err = ifeq(r, code)
 		case IntShiftRight:
-			log.Info("ishr")
+			log.Debug("ishr")
 			err = intShiftRight(r)
 		case IStore2:
-			log.Info("istore_2")
-			err = istore(r, 2)
+			log.Debug("istore_2")
+			err = istore(ctx, r, 2)
+		case ILoad0:
+			log.Debug("iload_0")
+			err = iload(ctx, r, 0)
 		case ILoad1:
-			log.Info("iload_1")
-			err = iload(r, 1)
+			log.Debug("iload_1")
+			err = iload(ctx, r, 1)
 		case ILoad2:
-			log.Info("iload_2")
-			err = iload(r, 2)
+			log.Debug("iload_2")
+			err = iload(ctx, r, 2)
 		case ISub:
-			log.Info("isub")
+			log.Debug("isub")
 			err = isub(r)
 		case BiPush:
-			log.Info("bipush")
+			log.Debug("bipush")
 			value := code[r.pc+1]
 			r.pc += 2
 			err = r.stack.PushOperand(stack.IntValue{Value: int32(value)})
+		case IfLt:
+			log.Debug("iflt")
+			err = iflt(r, code)
+		case IfICmpLt:
+			log.Debug("if_icmplt")
+			err = ifICmpLt(r, code)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 
@@ -267,7 +279,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 
 	_, exists := r.initializedClasses[className]
 	if exists {
-		log.Infof("already initialized %s", className)
+		log.Debugw("already initialized", "className", className)
 		return nil
 	}
 
@@ -277,7 +289,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		r.classBeingInitialized = className
 	}
 
-	log.Infof("initializing %s", className)
+	log.Infow("initializing", "className", className)
 
 	c, err := r.loader.Load(ctx, className)
 	if err != nil {
@@ -287,7 +299,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	clinit, ok, err := c.GetMethod("<clinit>")
 	if !ok {
 		r.initializedClasses[className] = struct{}{}
-		log.Infof("initialized %s", className)
+		log.Infow("initialized without clinit", "className", className)
 		return nil
 	}
 
@@ -306,7 +318,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 	}
 
 	r.initializedClasses[className] = struct{}{}
-	log.Infof("initialized %s", className)
+	log.Infow("initialized", "className", className)
 	return nil
 }
 
@@ -318,7 +330,12 @@ func (r *Runner) runMethod(ctx context.Context, code *class.CodeAttribute, c cla
 		return err
 	}
 
-	log.Infof("running %s %s %s % x", c.Name, name, parameters, code)
+	log.Infow("executing method",
+		"class", c.Name,
+		"name", name,
+		"parameters", fmt.Sprintf("%s", parameters),
+		"code", fmt.Sprintf("% x", code.Code), // Use hex formatting for binary data
+	)
 	r.stack.Push(c.Name, method, c.ConstantPool, parameters)
 
 	returnPc := r.pc
@@ -337,51 +354,4 @@ func (r *Runner) runMethod(ctx context.Context, code *class.CodeAttribute, c cla
 
 	r.pc = returnPc
 	return nil
-}
-
-func (r *Runner) runNative(ctx context.Context, c class.Class, method *class.Method, operands []stack.Value) (stack.Value, error) {
-	descriptor, err := c.ConstantPool.GetUtf8(method.DescriptorIndex)
-	if err != nil {
-		return nil, err
-	}
-
-	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
-	if err != nil {
-		return nil, err
-	}
-
-	methodName, err := c.ConstantPool.GetUtf8(method.NameIndex)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.Name == "java/lang/System" &&
-		methodName == "registerNatives" &&
-		methodDescriptor.ReturnDescriptor == 'V' &&
-		len(methodDescriptor.Parameters) == 0 {
-
-		method, ok, err := c.GetMethod("initPhase1")
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, errors.New("method 'initPhase1' not found")
-		}
-
-		code, err := method.CodeAttribute()
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, r.runMethod(ctx, code, c, *method, operands)
-	} else if c.Name == "java/lang/Class" && methodName == "registerNatives" {
-		return nil, nil
-	} else if c.Name == "java/lang/Class" && methodName == "desiredAssertionStatus0" {
-		return stack.BooleanValue{Value: true}, nil
-	} else if c.Name == "java/lang/StringUTF16" && methodName == "isBigEndian" {
-		return stack.BooleanValue{Value: true}, nil
-	} else {
-		return nil, fmt.Errorf("native method %s in %s not implemented", methodName, c.Name)
-	}
 }

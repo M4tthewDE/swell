@@ -30,7 +30,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	log.Infof("running %s using class path %s", mainClassName, classPath)
+	log.Infow("executing main", "mainClass", mainClassName, "classPath", classPath)
 
 	ctx := logger.OnContext(context.Background(), log)
 	runner := jvm.NewRunner(classPath)

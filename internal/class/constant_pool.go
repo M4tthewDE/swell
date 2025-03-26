@@ -30,7 +30,7 @@ func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*Con
 			i += 1
 		}
 
-		log.Debugf("cp info %d: %s", i, cpInfo)
+		log.Debugw("cp info", "i", i, "cpInfo", cpInfo)
 
 		infos[i] = cpInfo
 	}

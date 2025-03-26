@@ -18,6 +18,9 @@ const BOOLEAN = 'Z'
 type BaseType rune
 
 func (b BaseType) isFieldType() {}
+func (b BaseType) length() int {
+	return 1
+}
 
 func (b BaseType) String() string {
 	return fmt.Sprintf("BaseType[%s]", string(b))
@@ -51,6 +54,9 @@ type ObjectType struct {
 }
 
 func (o ObjectType) isFieldType() {}
+func (o ObjectType) length() int {
+	return len(o.ClassName) + 2
+}
 
 func (o ObjectType) String() string {
 	return fmt.Sprintf("ObjectType[%s]", o.ClassName)
@@ -69,9 +75,17 @@ func NewObjectType(objectType string) (*ObjectType, error) {
 	return &ObjectType{ClassName: objectType[1:index]}, nil
 }
 
-type ArrayType FieldType
+type ArrayType struct {
+	FieldType FieldType
+}
 
-func NewArrayType(arrayType string) (ArrayType, error) {
+func (a ArrayType) isFieldType() {}
+
+func (a ArrayType) length() int {
+	return a.FieldType.length()
+}
+
+func NewArrayType(arrayType string, endIndex int) (*ArrayType, error) {
 	if arrayType[0] != '[' {
 		return nil, fmt.Errorf("invalid array type: %s", string(arrayType))
 	}
@@ -81,25 +95,31 @@ func NewArrayType(arrayType string) (ArrayType, error) {
 		return nil, err
 	}
 
-	return ArrayType(fieldType), nil
+	return &ArrayType{FieldType: fieldType}, nil
 }
 
 type FieldType interface {
 	isFieldType()
+	length() int
 }
 
-func NewFieldType(fieldType string) (FieldType, error) {
-	baseType, err := NewBaseType(rune(fieldType[0]))
+func NewFieldType(rawFieldType string) (FieldType, error) {
+	baseType, err := NewBaseType(rune(rawFieldType[0]))
 	if err == nil {
 		return baseType, nil
 	}
 
-	objectType, err := NewObjectType(fieldType)
+	objectType, err := NewObjectType(rawFieldType)
 	if err == nil {
 		return *objectType, nil
 	}
 
-	return NewArrayType(fieldType)
+	arrayType, err := NewArrayType(rawFieldType, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return *arrayType, nil
 }
 
 const VOID = 'V'
@@ -166,12 +186,13 @@ func parseParameters(raw string, parameters []FieldType) ([]FieldType, error) {
 	}
 
 	if raw[0] == '[' {
-		arrayType, err := NewArrayType(raw)
+		arrayType, err := NewArrayType(raw, 0)
 		if err != nil {
 			return nil, err
 		}
 
-		return append(parameters, arrayType), nil
+		parameters = append(parameters, *arrayType)
+		return parseParameters(raw[arrayType.length()+1:], parameters)
 	}
 
 	return nil, errors.New("invalid parameters")

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/m4tthewde/swell/internal/class"
+	"github.com/m4tthewde/swell/internal/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +42,7 @@ func TestStackPopOperand(t *testing.T) {
 	assert.Nil(t, err)
 
 	value, err := DefaultValue(baseType)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 
 	err = stack.PushOperand(value)
 	assert.Nil(t, err)
@@ -75,10 +76,16 @@ func TestStackSetLocalVariable(t *testing.T) {
 	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
 
 	value := BooleanValue{Value: false}
-	err := stack.SetLocalVariable(0, value)
+
+	log, err := logger.NewLogger()
 	assert.Nil(t, err)
 
-	variable, err := stack.GetLocalVariable(0)
+	ctx := logger.OnContext(t.Context(), log)
+
+	err = stack.SetLocalVariable(ctx, 0, value)
+	assert.Nil(t, err)
+
+	variable, err := stack.GetLocalVariable(ctx, 0)
 	assert.Nil(t, err)
 	assert.Equal(t, value, variable)
 }

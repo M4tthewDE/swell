@@ -22,7 +22,7 @@ func TestMethodDescriptor(t *testing.T) {
 
 func TestMethodDescriptorArray(t *testing.T) {
 	parameters := []FieldType{
-		ArrayType(ObjectType{ClassName: "java/lang/String"}),
+		ArrayType{FieldType: ObjectType{ClassName: "java/lang/String"}},
 	}
 
 	methodDescriptor, err := NewMethodDescriptor("([Ljava/lang/String;)V")
@@ -30,4 +30,17 @@ func TestMethodDescriptorArray(t *testing.T) {
 	assert.NotNil(t, methodDescriptor)
 	assert.Equal(t, parameters, methodDescriptor.Parameters)
 	assert.Equal(t, 'V', methodDescriptor.ReturnDescriptor)
+}
+
+func TestMethodDescriptorArrayAndParameter(t *testing.T) {
+	parameters := []FieldType{
+		ArrayType{FieldType: BaseType(BYTE)},
+		BaseType(INT),
+	}
+
+	methodDescriptor, err := NewMethodDescriptor("([BI)C")
+	assert.Nil(t, err)
+	assert.NotNil(t, methodDescriptor)
+	assert.Equal(t, parameters, methodDescriptor.Parameters)
+	assert.Equal(t, BaseType(CHAR), methodDescriptor.ReturnDescriptor)
 }

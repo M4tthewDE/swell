@@ -66,7 +66,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 		return &c.class, nil
 	}
 
-	log.Infof("loading %s", className)
+	log.Infow("loading", "className", className)
 
 	r, err := getReader(className, l.classPath)
 	if err != nil {
@@ -84,7 +84,7 @@ func (l *Loader) Load(ctx context.Context, className string) (*class.Class, erro
 
 	l.classes[className] = LoaderClass{class: *class, fields: make(map[string]stack.Value)}
 
-	log.Infof("loaded %s", className)
+	log.Infow("finished loading", "clasName", className)
 
 	return class, nil
 }
