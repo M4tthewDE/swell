@@ -112,6 +112,7 @@ const ISub = 0x64
 const BiPush = 0x10
 const IfLt = 0x9b
 const IfICmpLt = 0xa1
+const NewArray = 0xbc
 
 func (r *Runner) run(ctx context.Context, code []byte) error {
 	log := logger.FromContext(ctx)
@@ -259,6 +260,9 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 		case IfICmpLt:
 			log.Debug("if_icmplt")
 			err = ifICmpLt(r, code)
+		case NewArray:
+			log.Debug("newarray")
+			err = newArray(r, ctx, code)
 		default:
 			return fmt.Errorf("unknown instruction %x", instruction)
 

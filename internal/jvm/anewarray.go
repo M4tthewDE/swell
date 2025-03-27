@@ -20,7 +20,7 @@ func anewarray(r *Runner, ctx context.Context, code []byte) error {
 	operand := operands[0]
 
 	if o, ok := operand.(stack.IntValue); !ok {
-		return fmt.Errorf("coutn has to be int, is  %s", o)
+		return fmt.Errorf("count has to be int, is  %s", o)
 	}
 
 	count := operand.(stack.IntValue)
