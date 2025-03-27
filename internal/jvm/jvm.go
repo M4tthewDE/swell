@@ -300,7 +300,7 @@ func (r *Runner) initializeClass(ctx context.Context, className string) error {
 		return err
 	}
 
-	clinit, ok, err := c.GetMethod("<clinit>")
+	clinit, ok, err := c.GetMethodByName("<clinit>")
 	if !ok {
 		r.initializedClasses[className] = struct{}{}
 		log.Infow("initialized without clinit", "className", className)

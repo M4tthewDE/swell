@@ -35,9 +35,27 @@ func (c *Class) GetMainMethod() (*Method, bool, error) {
 	return nil, false, nil
 }
 
-// TODO: name is not enough to find the correct method
-// will have to use descriptor in the future
-func (c *Class) GetMethod(methodName string) (*Method, bool, error) {
+func (c *Class) GetMethod(methodName string, descriptor string) (*Method, bool, error) {
+	for _, m := range c.Methods {
+		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
+		if err != nil {
+			return nil, false, err
+		}
+
+		methodDescriptor, err := c.ConstantPool.GetUtf8(m.DescriptorIndex)
+		if err != nil {
+			return nil, false, err
+		}
+
+		if name == methodName && methodDescriptor == descriptor {
+			return &m, true, nil
+		}
+	}
+
+	return nil, false, nil
+}
+
+func (c *Class) GetMethodByName(methodName string) (*Method, bool, error) {
 	for _, m := range c.Methods {
 		name, err := c.ConstantPool.GetUtf8(m.NameIndex)
 		if err != nil {

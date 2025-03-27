@@ -50,17 +50,17 @@ func invokeSpecial(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	method, ok, err := c.GetMethod(methodName)
+	descriptor, err := pool.GetUtf8(nameAndType.DescriptorIndex)
+	if err != nil {
+		return err
+	}
+
+	method, ok, err := c.GetMethod(methodName, descriptor)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		return err
-	}
-
-	descriptor, err := pool.GetUtf8(nameAndType.DescriptorIndex)
-	if err != nil {
 		return err
 	}
 

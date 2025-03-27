@@ -47,18 +47,18 @@ func invokeVirtual(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	method, ok, err := c.GetMethod(methodName)
+	descriptorString, err := pool.GetUtf8(nameAndType.DescriptorIndex)
+	if err != nil {
+		return err
+	}
+
+	method, ok, err := c.GetMethod(methodName, descriptorString)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
 		return fmt.Errorf("method %s not found in %s", methodName, c.Name)
-	}
-
-	descriptorString, err := pool.GetUtf8(nameAndType.DescriptorIndex)
-	if err != nil {
-		return err
 	}
 
 	methodDescriptor, err := class.NewMethodDescriptor(descriptorString)

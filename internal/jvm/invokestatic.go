@@ -52,18 +52,18 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	method, ok, err := c.GetMethod(methodName)
+	descriptor, err := pool.GetUtf8(nameAndType.DescriptorIndex)
+	if err != nil {
+		return err
+	}
+
+	method, ok, err := c.GetMethod(methodName, descriptor)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
 		return errors.New("method not found")
-	}
-
-	descriptor, err := pool.GetUtf8(nameAndType.DescriptorIndex)
-	if err != nil {
-		return err
 	}
 
 	methodDescriptor, err := class.NewMethodDescriptor(descriptor)
@@ -118,7 +118,7 @@ func runNative(ctx context.Context, r *Runner, c class.Class, method *class.Meth
 		methodDescriptor.ReturnDescriptor == 'V' &&
 		len(methodDescriptor.Parameters) == 0 {
 
-		method, ok, err := c.GetMethod("initPhase1")
+		method, ok, err := c.GetMethodByName("initPhase1")
 		if err != nil {
 			return nil, err
 		}
