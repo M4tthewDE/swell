@@ -89,3 +89,19 @@ func TestStackSetLocalVariable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, value, variable)
 }
+
+func TestStackPopMultipleOperands(t *testing.T) {
+	stack := NewStack()
+	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+
+	err := stack.PushOperand(BooleanValue{Value: false})
+	assert.Nil(t, err)
+
+	err = stack.PushOperand(BooleanValue{Value: true})
+	assert.Nil(t, err)
+
+	operands, err := stack.PopOperands(2)
+	assert.Nil(t, err)
+
+	assert.Equal(t, []Value{BooleanValue{Value: true}, BooleanValue{Value: false}}, operands)
+}

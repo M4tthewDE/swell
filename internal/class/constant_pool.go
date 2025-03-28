@@ -2,20 +2,16 @@ package class
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"math"
-
-	"github.com/m4tthewde/swell/internal/logger"
 )
 
 type ConstantPool struct {
 	Infos []CpInfo `json:"infos"`
 }
 
-func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*ConstantPool, error) {
-	log := logger.FromContext(ctx)
+func NewConstantPool(reader *bufio.Reader, count int) (*ConstantPool, error) {
 
 	infos := make([]CpInfo, count)
 	infos[0] = ReservedInfo{}
@@ -29,8 +25,6 @@ func NewConstantPool(ctx context.Context, reader *bufio.Reader, count int) (*Con
 		if _, ok := cpInfo.(LongInfo); ok {
 			i += 1
 		}
-
-		log.Debugw("cp info", "i", i, "cpInfo", cpInfo)
 
 		infos[i] = cpInfo
 	}

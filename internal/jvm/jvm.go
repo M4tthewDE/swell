@@ -119,7 +119,6 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 
 	for {
 		instruction := code[r.pc]
-		log.Debugw("instruction", "pc", r.pc)
 
 		var err error
 		switch instruction {

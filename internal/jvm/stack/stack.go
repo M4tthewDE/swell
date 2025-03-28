@@ -172,3 +172,12 @@ func (s *Stack) CurrentClassName() string {
 
 	return frame.className
 }
+
+func (s *Stack) Operands() ([]Value, error) {
+	frame, err := s.activeFrame()
+	if err != nil {
+		return nil, err
+	}
+
+	return frame.operands, nil
+}

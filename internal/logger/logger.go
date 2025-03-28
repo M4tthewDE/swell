@@ -16,18 +16,45 @@ var (
 )
 
 func NewLogger() (*zap.SugaredLogger, error) {
-	zapConfig := zap.NewDevelopmentConfig()
-	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	zapConfig.Level = getLogLevel()
-
-	zapConfig.EncoderConfig.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	devEncoderConfig := zap.NewDevelopmentEncoderConfig()
+	devEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	devEncoderConfig.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
 		enc.AppendString(fmt.Sprintf("%-25s", caller.TrimmedPath()))
 	}
 
-	logger, err := zapConfig.Build()
+	logLevel := getLogLevel()
+
+	consoleEncoder := zapcore.NewConsoleEncoder(devEncoderConfig)
+
+	jsonEncoderConfig := zap.NewProductionEncoderConfig()
+	jsonEncoderConfig.TimeKey = "timestamp"
+	jsonEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	jsonEncoder := zapcore.NewJSONEncoder(jsonEncoderConfig)
+
+	stdoutCore := zapcore.NewCore(
+		consoleEncoder,
+		zapcore.AddSync(os.Stdout),
+		logLevel,
+	)
+
+	logFile, err := os.Create("swell.log.json")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not create log file: %w", err)
 	}
+
+	fileCore := zapcore.NewCore(
+		jsonEncoder,
+		zapcore.AddSync(logFile),
+		logLevel,
+	)
+
+	core := zapcore.NewTee(stdoutCore, fileCore)
+
+	logger := zap.New(
+		core,
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+	)
 
 	return logger.Sugar(), nil
 }

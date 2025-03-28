@@ -28,7 +28,7 @@ func newObject(name string, fields map[string]stack.Value) Object {
 func (o *Object) GetFieldValue(name string) (stack.Value, error) {
 	value, ok := o.fields[name]
 	if !ok {
-		return nil, fmt.Errorf("field with name %s not found on %s", name, o.className)
+		return nil, fmt.Errorf("field with name '%s' not found on %s", name, o.className)
 	}
 
 	return value, nil

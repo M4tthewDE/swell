@@ -3,7 +3,6 @@ package class
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -87,7 +86,7 @@ func (c *Class) GetField(fieldName string) (*Field, bool, error) {
 	return nil, false, nil
 }
 
-func NewClass(ctx context.Context, reader *bufio.Reader, name string) (*Class, error) {
+func NewClass(reader *bufio.Reader, name string) (*Class, error) {
 	magic := make([]byte, 4)
 	_, err := io.ReadFull(reader, magic)
 	if err != nil {
@@ -109,7 +108,7 @@ func NewClass(ctx context.Context, reader *bufio.Reader, name string) (*Class, e
 		return nil, err
 	}
 
-	constantPool, err := NewConstantPool(ctx, reader, int(constantPoolCount))
+	constantPool, err := NewConstantPool(reader, int(constantPoolCount))
 	if err != nil {
 		return nil, fmt.Errorf("constant pool in %s: %v", name, err)
 	}
