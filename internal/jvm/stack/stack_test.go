@@ -28,7 +28,13 @@ func TestStackPushOperand(t *testing.T) {
 	ctx := logger.OnContext(t.Context(), log)
 
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+	stack.Push("Main", class.Method{
+		NameIndex: 0,
+	}, class.ConstantPool{
+		Infos: []class.CpInfo{
+			class.Utf8Info{Content: "testMethod"},
+		},
+	}, []Value{})
 
 	value := BooleanValue{Value: false}
 	err = stack.PushOperand(ctx, value)
@@ -46,7 +52,13 @@ func TestStackPopOperand(t *testing.T) {
 	ctx := logger.OnContext(t.Context(), log)
 
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
+	stack.Push("Main", class.Method{
+		NameIndex: 0,
+	}, class.ConstantPool{
+		Infos: []class.CpInfo{
+			class.Utf8Info{Content: "testMethod"},
+		},
+	}, []Value{})
 
 	baseType, err := class.NewBaseType(class.BOOLEAN)
 	assert.Nil(t, err)
@@ -71,8 +83,21 @@ func TestStackPushOperandInvoker(t *testing.T) {
 	ctx := logger.OnContext(t.Context(), log)
 
 	stack := NewStack()
-	stack.Push("Main", class.Method{}, class.ConstantPool{}, []Value{})
-	stack.Push("Main2", class.Method{}, class.ConstantPool{}, []Value{})
+	stack.Push("Main1", class.Method{
+		NameIndex: 0,
+	}, class.ConstantPool{
+		Infos: []class.CpInfo{
+			class.Utf8Info{Content: "testMethod1"},
+		},
+	}, []Value{})
+
+	stack.Push("Main2", class.Method{
+		NameIndex: 0,
+	}, class.ConstantPool{
+		Infos: []class.CpInfo{
+			class.Utf8Info{Content: "testMethod2"},
+		},
+	}, []Value{})
 
 	value := BooleanValue{Value: false}
 	err = stack.PushOperandInvoker(ctx, value)
