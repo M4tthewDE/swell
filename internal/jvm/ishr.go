@@ -1,12 +1,13 @@
 package jvm
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/jvm/stack"
 )
 
-func intShiftRight(r *Runner) error {
+func intShiftRight(ctx context.Context, r *Runner) error {
 	r.pc += 1
 	operands, err := r.stack.PopOperands(2)
 	if err != nil {
@@ -18,7 +19,7 @@ func intShiftRight(r *Runner) error {
 
 	if ok1 && ok2 {
 		result := value1.Value >> (value2.Value & 31)
-		return r.stack.PushOperand(stack.IntValue{Value: result})
+		return r.stack.PushOperand(ctx, stack.IntValue{Value: result})
 	}
 
 	return fmt.Errorf("values have to be int, are %v and %v", operands[0], operands[1])

@@ -63,5 +63,5 @@ func getStatic(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	return r.stack.PushOperand(fieldValue)
+	return r.stack.PushOperand(ctx, fieldValue)
 }

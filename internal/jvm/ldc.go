@@ -59,9 +59,9 @@ func ldc(r *Runner, ctx context.Context, index int) error {
 			return err
 		}
 
-		return r.stack.PushOperand(stack.ClassReferenceValue{Value: ref, Class: c})
+		return r.stack.PushOperand(ctx, stack.ClassReferenceValue{Value: ref, Class: c})
 	case class.IntegerInfo:
-		return r.stack.PushOperand(stack.IntValue{Value: int32(info.Value)})
+		return r.stack.PushOperand(ctx, stack.IntValue{Value: int32(info.Value)})
 	case class.StringInfo:
 		stringValue, err := pool.GetUtf8(info.StringIndex)
 		if err != nil {
@@ -96,7 +96,7 @@ func ldc(r *Runner, ctx context.Context, index int) error {
 			return err
 		}
 
-		return r.stack.PushOperand(stack.ReferenceValue{Value: strID})
+		return r.stack.PushOperand(ctx, stack.ReferenceValue{Value: strID})
 	default:
 		return fmt.Errorf("ldc not implemented for %s", cpInfo)
 	}

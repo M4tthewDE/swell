@@ -16,11 +16,11 @@ func aload(ctx context.Context, r *Runner, n int) error {
 
 	switch val := variable.(type) {
 	case stack.ReferenceValue:
-		return r.stack.PushOperand(val)
+		return r.stack.PushOperand(ctx, val)
 	case stack.ClassReferenceValue:
-		return r.stack.PushOperand(val)
+		return r.stack.PushOperand(ctx, val)
 	case Array:
-		return r.stack.PushOperand(val)
+		return r.stack.PushOperand(ctx, val)
 	default:
 		return fmt.Errorf("invalid variable type: %s", val)
 	}

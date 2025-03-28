@@ -1,8 +1,12 @@
 package jvm
 
-import "github.com/m4tthewde/swell/internal/jvm/stack"
+import (
+	"context"
 
-func iconst(r *Runner, n int32) error {
+	"github.com/m4tthewde/swell/internal/jvm/stack"
+)
+
+func iconst(ctx context.Context, r *Runner, n int32) error {
 	r.pc += 1
-	return r.stack.PushOperand(stack.IntValue{Value: n})
+	return r.stack.PushOperand(ctx, stack.IntValue{Value: n})
 }

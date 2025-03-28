@@ -90,7 +90,7 @@ func invokeStatic(r *Runner, ctx context.Context, code []byte) error {
 		}
 
 		if val != nil {
-			return r.stack.PushOperand(val)
+			return r.stack.PushOperand(ctx, val)
 		}
 
 		return nil

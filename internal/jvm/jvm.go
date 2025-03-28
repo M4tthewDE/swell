@@ -157,7 +157,7 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = new(r, ctx, code)
 		case DupOp:
 			log.Debug("dup")
-			err = dup(r)
+			err = dup(ctx, r)
 		case InvokeSpecialOp:
 			log.Debug("invokespecial")
 			err = invokeSpecial(r, ctx, code)
@@ -166,7 +166,7 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			return ret(r)
 		case AReturn:
 			log.Debug("areturn")
-			return areturn(r)
+			return areturn(ctx, r)
 		case Astore0:
 			log.Debug("astore_0")
 			err = astore(ctx, r, 0)
@@ -184,25 +184,25 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = ifnonnull(r, code)
 		case IConstM1:
 			log.Debug("iconst_m1")
-			err = iconst(r, -1)
+			err = iconst(ctx, r, -1)
 		case IConst0:
 			log.Debug("iconst_0")
-			err = iconst(r, 0)
+			err = iconst(ctx, r, 0)
 		case IConst1:
 			log.Debug("iconst_1")
-			err = iconst(r, 1)
+			err = iconst(ctx, r, 1)
 		case IConst2:
 			log.Debug("iconst_2")
-			err = iconst(r, 2)
+			err = iconst(ctx, r, 2)
 		case IConst3:
 			log.Debug("iconst_3")
-			err = iconst(r, 3)
+			err = iconst(ctx, r, 3)
 		case IConst4:
 			log.Debug("iconst_4")
-			err = iconst(r, 4)
+			err = iconst(ctx, r, 4)
 		case IConst5:
 			log.Debug("iconst_5")
-			err = iconst(r, 5)
+			err = iconst(ctx, r, 5)
 		case ANewArray:
 			log.Debug("anwarray")
 			err = anewarray(r, ctx, code)
@@ -214,7 +214,7 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			r.pc += 1
 		case IReturn:
 			log.Debug("ireturn")
-			return ireturn(r)
+			return ireturn(ctx, r)
 		case IfNe:
 			log.Debug("ifne")
 			err = ifne(r, code)
@@ -226,13 +226,13 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = putField(r, ctx, code)
 		case ArrayLength:
 			log.Debug("arraylength")
-			err = arrayLength(r)
+			err = arrayLength(ctx, r)
 		case IfEq:
 			log.Debug("ifeq")
 			err = ifeq(r, code)
 		case IntShiftRight:
 			log.Debug("ishr")
-			err = intShiftRight(r)
+			err = intShiftRight(ctx, r)
 		case IStore2:
 			log.Debug("istore_2")
 			err = istore(ctx, r, 2)
@@ -247,12 +247,12 @@ func (r *Runner) run(ctx context.Context, code []byte) error {
 			err = iload(ctx, r, 2)
 		case ISub:
 			log.Debug("isub")
-			err = isub(r)
+			err = isub(ctx, r)
 		case BiPush:
 			log.Debug("bipush")
 			value := code[r.pc+1]
 			r.pc += 2
-			err = r.stack.PushOperand(stack.IntValue{Value: int32(value)})
+			err = r.stack.PushOperand(ctx, stack.IntValue{Value: int32(value)})
 		case IfLt:
 			log.Debug("iflt")
 			err = iflt(r, code)

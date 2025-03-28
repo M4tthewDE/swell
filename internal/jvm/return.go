@@ -1,6 +1,7 @@
 package jvm
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/m4tthewde/swell/internal/class"
@@ -35,7 +36,7 @@ func ret(r *Runner) error {
 	return nil
 }
 
-func areturn(r *Runner) error {
+func areturn(ctx context.Context, r *Runner) error {
 	operands, err := r.stack.PopOperands(1)
 	if err != nil {
 		return err
@@ -43,13 +44,13 @@ func areturn(r *Runner) error {
 
 	if objectref, ok := operands[0].(stack.ReferenceValue); ok {
 		// FIXME: check assignment compatibility according with JLS §5.2
-		return r.stack.PushOperandInvoker(objectref)
+		return r.stack.PushOperandInvoker(ctx, objectref)
 	}
 
 	return fmt.Errorf("operand has to be reference, is %s", operands[0])
 }
 
-func ireturn(r *Runner) error {
+func ireturn(ctx context.Context, r *Runner) error {
 	operands, err := r.stack.PopOperands(1)
 	if err != nil {
 		return err
@@ -63,15 +64,15 @@ func ireturn(r *Runner) error {
 			val = 0
 		}
 
-		return r.stack.PushOperandInvoker(stack.IntValue{Value: val})
+		return r.stack.PushOperandInvoker(ctx, stack.IntValue{Value: val})
 	}
 
 	if byteValue, ok := operands[0].(stack.ByteValue); ok {
-		return r.stack.PushOperandInvoker(stack.IntValue{Value: int32(byteValue.Value)})
+		return r.stack.PushOperandInvoker(ctx, stack.IntValue{Value: int32(byteValue.Value)})
 	}
 
 	if intValue, ok := operands[0].(stack.IntValue); ok {
-		return r.stack.PushOperandInvoker(intValue)
+		return r.stack.PushOperandInvoker(ctx, intValue)
 	}
 
 	return fmt.Errorf("operand has to be int, is %s", operands[0])

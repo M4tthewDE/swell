@@ -1,6 +1,8 @@
 package jvm
 
-func dup(r *Runner) error {
+import "context"
+
+func dup(ctx context.Context, r *Runner) error {
 	r.pc += 1
 
 	operand, err := r.stack.GetOperand()
@@ -8,5 +10,5 @@ func dup(r *Runner) error {
 		return err
 	}
 
-	return r.stack.PushOperand(operand)
+	return r.stack.PushOperand(ctx, operand)
 }

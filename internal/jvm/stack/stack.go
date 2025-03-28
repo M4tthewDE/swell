@@ -74,7 +74,7 @@ func (s *Stack) PopOperands(count int) ([]Value, error) {
 	return operands, nil
 }
 
-func (s *Stack) PushOperand(operand Value) error {
+func (s *Stack) PushOperand(ctx context.Context, operand Value) error {
 	frame, err := s.activeFrame()
 	if err != nil {
 		return err
@@ -83,10 +83,19 @@ func (s *Stack) PushOperand(operand Value) error {
 	frame.operands = append(frame.operands, operand)
 	s.frames[len(s.frames)-1] = *frame
 
+	log := logger.FromContext(ctx)
+
+	methodName, err := frame.constantPool.GetUtf8(frame.method.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	log.Debugw("pushed operand", "value", operand, "className", frame.className, "methodName", methodName)
+
 	return nil
 }
 
-func (s *Stack) PushOperandInvoker(operand Value) error {
+func (s *Stack) PushOperandInvoker(ctx context.Context, operand Value) error {
 	if len(s.frames) < 2 {
 		return errors.New("stack has no invoker")
 	}
@@ -95,6 +104,15 @@ func (s *Stack) PushOperandInvoker(operand Value) error {
 
 	frame.operands = append(frame.operands, operand)
 	s.frames[len(s.frames)-2] = frame
+
+	log := logger.FromContext(ctx)
+
+	methodName, err := frame.constantPool.GetUtf8(frame.method.NameIndex)
+	if err != nil {
+		return err
+	}
+
+	log.Debugw("pushed operand", "value", operand, "className", frame.className, "methodName", methodName)
 
 	return nil
 }

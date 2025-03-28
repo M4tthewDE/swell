@@ -52,7 +52,7 @@ func anewarray(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.stack.PushOperand(stack.ReferenceValue{Value: id})
+		return r.stack.PushOperand(ctx, stack.ReferenceValue{Value: id})
 	default:
 		return fmt.Errorf("anewarray not implemented for %s", cpInfo)
 	}

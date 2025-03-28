@@ -16,7 +16,7 @@ func iload(ctx context.Context, r *Runner, n int) error {
 	}
 
 	if value, ok := localVariable.(stack.IntValue); ok {
-		return r.stack.PushOperand(value)
+		return r.stack.PushOperand(ctx, value)
 	}
 
 	return fmt.Errorf("value has to be integer, is %v", localVariable)

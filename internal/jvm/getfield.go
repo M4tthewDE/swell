@@ -64,7 +64,7 @@ func getField(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.stack.PushOperand(fieldValue)
+		return r.stack.PushOperand(ctx, fieldValue)
 	}
 
 	if reference, ok := objectRef.(stack.ClassReferenceValue); ok {
@@ -78,7 +78,7 @@ func getField(r *Runner, ctx context.Context, code []byte) error {
 			return err
 		}
 
-		return r.stack.PushOperand(fieldValue)
+		return r.stack.PushOperand(ctx, fieldValue)
 	}
 
 	return errors.New("objectref has to be a reference")

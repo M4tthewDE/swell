@@ -40,5 +40,5 @@ func new(r *Runner, ctx context.Context, code []byte) error {
 		return err
 	}
 
-	return r.stack.PushOperand(stack.ReferenceValue{Value: id})
+	return r.stack.PushOperand(ctx, stack.ReferenceValue{Value: id})
 }
